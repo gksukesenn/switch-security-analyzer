@@ -1,0 +1,23 @@
+from src.domain.models import Finding
+from src.parsers.cisco.ios import CiscoIOSParser
+from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
+
+
+class AnalyzerService:
+    def __init__(self) -> None:
+        self.parser = CiscoIOSParser()
+
+        self.rules = [
+            DHCP003TrustedAccessPortRule(),
+        ]
+
+    def analyze(self, raw_text: str) -> list[Finding]:
+        config = self.parser.parse(raw_text)
+
+        findings: list[Finding] = []
+
+        for rule in self.rules:
+            rule_findings = rule.evaluate(config)
+            findings.extend(rule_findings)
+
+        return findings

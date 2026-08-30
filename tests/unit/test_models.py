@@ -1,0 +1,44 @@
+from src.domain.models import (
+    ConfigState,
+    InterfaceConfig,
+    InterfaceMode,
+    ParsedConfig,
+)
+
+
+def test_interface_defaults_to_not_configured_dhcp_trust():
+    interface = InterfaceConfig(
+        name="GigabitEthernet1/0/5",
+    )
+
+    assert interface.dhcp_snooping_trust == ConfigState.NOT_CONFIGURED
+
+
+def test_parsed_config_can_store_dhcp_information():
+    interface = InterfaceConfig(
+        name="GigabitEthernet1/0/5",
+        mode=InterfaceMode.ACCESS,
+        access_vlan=10,
+        dhcp_snooping_trust=ConfigState.ENABLED,
+    )
+
+    config = ParsedConfig(
+        vendor="cisco_ios",
+        hostname="ACCESS-SW-01",
+        dhcp_snooping_global=ConfigState.ENABLED,
+        dhcp_snooping_vlans={10},
+        interfaces=[interface],
+    )
+
+    assert config.vendor == "cisco_ios"
+    assert config.hostname == "ACCESS-SW-01"
+    assert config.dhcp_snooping_global == ConfigState.ENABLED
+    assert config.dhcp_snooping_vlans == {10}
+
+    assert len(config.interfaces) == 1
+    assert config.interfaces[0].mode == InterfaceMode.ACCESS
+    assert config.interfaces[0].access_vlan == 10
+    assert (
+        config.interfaces[0].dhcp_snooping_trust
+        == ConfigState.ENABLED
+    )
