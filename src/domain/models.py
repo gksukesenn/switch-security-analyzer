@@ -54,6 +54,20 @@ class InterfaceConfig:
 
 
 @dataclass
+class VtyConfig:
+    start: int
+    end: int
+
+    # ENABLED means an explicit, non-empty transport directive was fully
+    # normalized; it does not mean the management configuration is secure.
+    transport_input_state: ConfigState = ConfigState.NOT_CONFIGURED
+    transport_input: set[str] = field(default_factory=set)
+    transport_input_evidence: SourceLine | None = None
+
+    raw_lines: list[SourceLine] = field(default_factory=list)
+
+
+@dataclass
 class ParsedConfig:
     vendor: str
 
@@ -77,6 +91,7 @@ class ParsedConfig:
     bpdu_guard_default_evidence: SourceLine | None = None
 
     interfaces: list[InterfaceConfig] = field(default_factory=list)
+    vty_lines: list[VtyConfig] = field(default_factory=list)
 
     unparsed_lines: list[SourceLine] = field(default_factory=list)
 

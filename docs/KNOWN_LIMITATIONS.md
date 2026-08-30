@@ -68,3 +68,25 @@ are not yet fully modeled. A DHCP Snooping-protected VLAN does not by itself
 prove that organizational policy requires IP Source Guard, so the rule uses
 `MEDIUM` confidence. Reverse and configuration-health scenarios remain topics
 for separate future rules.
+
+## MGMT-001 — Explicit VTY Telnet allowance only
+
+MGMT-001 reports only VTY ranges that explicitly allow Telnet through a
+supported `transport input` command. When `transport input` is absent, the
+rule does not infer platform- or release-specific defaults.
+
+Management reachability, VTY `access-class`, management VRFs and interfaces,
+ACLs, firewalls, and out-of-band isolation are not yet included in exposure
+assessment. SSH server availability and version, authentication methods, AAA,
+key strength, and SSHv1 versus SSHv2 are outside this rule's scope.
+
+Unsupported VTY transport syntax is retained as unparsed/unknown rather than
+assumed safe. Authoritative replacement semantics for repeated
+`transport input` directives in the same VTY block were not established for
+this MVP, so repeated directives are also treated as ambiguous and do not
+produce a definitive MGMT-001 finding.
+
+For `transport input all`, the normalized protocol set represents only the
+security-relevant subset currently modeled by the analyzer (including SSH and
+Telnet); it is not intended to be an exhaustive inventory of every Cisco
+terminal transport protocol.

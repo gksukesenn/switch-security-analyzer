@@ -37,10 +37,11 @@ def main() -> None:
         print(f"Severity:   {finding.severity.value.upper()}")
         print(f"Confidence: {finding.confidence.value.upper()}")
 
-        print()
-        print("Affected interfaces:")
-        for interface in finding.affected_interfaces:
-            print(f"  - {interface}")
+        if finding.affected_interfaces:
+            print()
+            print("Affected interfaces:")
+            for interface in finding.affected_interfaces:
+                print(f"  - {interface}")
 
         print()
         print("Technical impact:")

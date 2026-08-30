@@ -202,3 +202,120 @@ interface GigabitEthernet1/0/2
         for interface in config.interfaces
     )
     assert [line.line_number for line in config.unparsed_lines] == [2, 5]
+
+
+def test_parser_reads_vty_range_and_transport_input():
+    config = CiscoIOSParser().parse("""line vty 0 4
+ transport input ssh telnet
+!
+""")
+
+    assert len(config.vty_lines) == 1
+    vty = config.vty_lines[0]
+    assert (vty.start, vty.end) == (0, 4)
+    assert vty.transport_input == {"ssh", "telnet"}
+    assert vty.transport_input_evidence is not None
+    assert vty.transport_input_evidence.line_number == 2
+
+
+def test_parser_keeps_multiple_vty_blocks_independent():
+    config = CiscoIOSParser().parse("""line vty 0 4
+ transport input ssh
+!
+line vty 5 15
+ transport input telnet
+!
+""")
+
+    assert [
+        (vty.start, vty.end, vty.transport_input)
+        for vty in config.vty_lines
+    ] == [
+        (0, 4, {"ssh"}),
+        (5, 15, {"telnet"}),
+    ]
+
+
+def test_parser_normalizes_supported_vty_transport_forms():
+    cases = {
+        "ssh": (ConfigState.ENABLED, {"ssh"}),
+        "telnet": (ConfigState.ENABLED, {"telnet"}),
+        "ssh telnet": (ConfigState.ENABLED, {"ssh", "telnet"}),
+        "telnet ssh": (ConfigState.ENABLED, {"ssh", "telnet"}),
+        "all": (ConfigState.ENABLED, {"ssh", "telnet"}),
+        "none": (ConfigState.DISABLED, set()),
+    }
+
+    for transport, (expected_state, expected_protocols) in cases.items():
+        config = CiscoIOSParser().parse(
+            f"line vty 0 4\n transport input {transport}\n!\n"
+        )
+        vty = config.vty_lines[0]
+
+        assert vty.transport_input_state == expected_state
+        assert vty.transport_input == expected_protocols
+        assert vty.transport_input_evidence is not None
+
+
+def test_parser_distinguishes_absent_vty_transport_from_none():
+    absent = CiscoIOSParser().parse("line vty 0 4").vty_lines[0]
+    explicit_none = CiscoIOSParser().parse(
+        "line vty 0 4\n transport input none"
+    ).vty_lines[0]
+
+    assert absent.transport_input == set()
+    assert absent.transport_input_state == ConfigState.NOT_CONFIGURED
+    assert absent.transport_input_evidence is None
+    assert explicit_none.transport_input == set()
+    assert explicit_none.transport_input_state == ConfigState.DISABLED
+    assert explicit_none.transport_input_evidence is not None
+
+
+def test_parser_marks_partially_supported_vty_transport_unknown():
+    config = CiscoIOSParser().parse("""line vty 0 4
+ transport input ssh lat
+!
+""")
+
+    vty = config.vty_lines[0]
+    assert vty.transport_input == set()
+    assert vty.transport_input_evidence is None
+    assert vty.transport_input_state == ConfigState.UNKNOWN
+    assert [line.line_number for line in config.unparsed_lines] == [2]
+
+
+def test_parser_marks_fully_unsupported_vty_transport_unknown():
+    config = CiscoIOSParser().parse("""line vty 0 4
+ transport input unsupported
+!
+""")
+
+    vty = config.vty_lines[0]
+    assert vty.transport_input == set()
+    assert vty.transport_input_evidence is None
+    assert vty.transport_input_state == ConfigState.UNKNOWN
+    assert [line.line_number for line in config.unparsed_lines] == [2]
+
+
+def test_parser_marks_repeated_vty_transport_ambiguous():
+    config = CiscoIOSParser().parse("""line vty 0 4
+ transport input ssh
+ transport input telnet
+!
+""")
+
+    vty = config.vty_lines[0]
+    assert vty.transport_input == set()
+    assert vty.transport_input_evidence is None
+    assert vty.transport_input_state == ConfigState.UNKNOWN
+    assert [line.line_number for line in config.unparsed_lines] == [3]
+
+
+def test_parser_does_not_treat_console_line_as_vty():
+    config = CiscoIOSParser().parse("""line console 0
+ transport input telnet
+!
+""")
+
+    assert config.vty_lines == []
+    assert [line.line_number for line in config.unparsed_lines] == [1, 2]

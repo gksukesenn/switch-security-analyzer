@@ -3,6 +3,7 @@ from src.domain.models import (
     InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
+    VtyConfig,
 )
 
 
@@ -48,3 +49,11 @@ def test_parsed_config_can_store_dhcp_information():
         config.interfaces[0].dhcp_snooping_trust
         == ConfigState.ENABLED
     )
+
+
+def test_vty_defaults_to_transport_not_configured():
+    vty = VtyConfig(start=0, end=4)
+
+    assert vty.transport_input == set()
+    assert vty.transport_input_evidence is None
+    assert vty.transport_input_state == ConfigState.NOT_CONFIGURED

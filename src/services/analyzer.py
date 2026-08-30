@@ -7,6 +7,7 @@ from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
 from src.rules.ip_source_guard.ipsg_001 import (
     IPSG001DhcpEndpointWithoutIPSGRule,
 )
+from src.rules.management.mgmt_001 import MGMT001VtyTelnetEnabledRule
 from src.rules.port_security.portsec_001 import (
     PORTSEC001InconsistentCoverageRule,
 )
@@ -25,6 +26,7 @@ class AnalyzerService:
             STP001PortFastWithoutBPDUGuardRule(),
             DAI001DhcpVlanWithoutDAIRule(),
             IPSG001DhcpEndpointWithoutIPSGRule(),
+            MGMT001VtyTelnetEnabledRule(),
         ]
 
     def analyze(self, raw_text: str) -> list[Finding]:

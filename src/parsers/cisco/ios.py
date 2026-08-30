@@ -4,6 +4,7 @@ from src.domain.models import (
     InterfaceMode,
     ParsedConfig,
     SourceLine,
+    VtyConfig,
 )
 
 
@@ -12,6 +13,7 @@ class CiscoIOSParser:
         config = ParsedConfig(vendor="cisco_ios")
 
         current_interface: InterfaceConfig | None = None
+        current_vty: VtyConfig | None = None
 
         for line_number, raw_line in enumerate(
             raw_text.splitlines(),
@@ -30,6 +32,7 @@ class CiscoIOSParser:
             # Cisco config'lerinde ! genellikle blok ayırıcıdır.
             if stripped == "!":
                 current_interface = None
+                current_vty = None
                 continue
 
             # Bir interface bloğunun altındaki girintili satırlar.
@@ -101,8 +104,24 @@ class CiscoIOSParser:
 
                 continue
 
+            if current_vty is not None and raw_line[:1].isspace():
+                current_vty.raw_lines.append(source_line)
+
+                if stripped.startswith("transport input "):
+                    self._parse_transport_input(
+                        stripped,
+                        source_line,
+                        current_vty,
+                        config,
+                    )
+                else:
+                    config.unparsed_lines.append(source_line)
+
+                continue
+
             # Girintisiz yeni bir komut geldiyse interface bloğu bitmiştir.
             current_interface = None
+            current_vty = None
 
             if stripped.startswith("interface "):
                 interface_name = stripped.removeprefix(
@@ -115,6 +134,27 @@ class CiscoIOSParser:
                 )
 
                 config.interfaces.append(current_interface)
+
+            elif stripped.startswith("line vty "):
+                range_tokens = stripped.split()
+
+                if len(range_tokens) != 4:
+                    config.unparsed_lines.append(source_line)
+                    continue
+
+                try:
+                    start = int(range_tokens[2])
+                    end = int(range_tokens[3])
+                except ValueError:
+                    config.unparsed_lines.append(source_line)
+                    continue
+
+                current_vty = VtyConfig(
+                    start=start,
+                    end=end,
+                    raw_lines=[source_line],
+                )
+                config.vty_lines.append(current_vty)
 
             elif stripped.startswith("hostname "):
                 config.hostname = stripped.removeprefix(
@@ -187,3 +227,41 @@ class CiscoIOSParser:
                 config.unparsed_lines.append(source_line)
 
         return config
+
+    @staticmethod
+    def _parse_transport_input(
+        stripped: str,
+        source_line: SourceLine,
+        vty: VtyConfig,
+        config: ParsedConfig,
+    ) -> None:
+        if vty.transport_input_evidence is not None:
+            vty.transport_input.clear()
+            vty.transport_input_evidence = None
+            vty.transport_input_state = ConfigState.UNKNOWN
+            config.unparsed_lines.append(source_line)
+            return
+
+        if vty.transport_input_state == ConfigState.UNKNOWN:
+            config.unparsed_lines.append(source_line)
+            return
+
+        tokens = stripped.removeprefix("transport input ").split()
+        token_set = set(tokens)
+
+        if token_set == {"all"}:
+            vty.transport_input = {"ssh", "telnet"}
+            vty.transport_input_state = ConfigState.ENABLED
+        elif token_set == {"none"}:
+            vty.transport_input = set()
+            vty.transport_input_state = ConfigState.DISABLED
+        elif tokens and token_set <= {"ssh", "telnet"}:
+            vty.transport_input = token_set
+            vty.transport_input_state = ConfigState.ENABLED
+        else:
+            vty.transport_input.clear()
+            vty.transport_input_state = ConfigState.UNKNOWN
+            config.unparsed_lines.append(source_line)
+            return
+
+        vty.transport_input_evidence = source_line
