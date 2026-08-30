@@ -1,6 +1,7 @@
 from src.domain.models import Finding
 from src.parsers.cisco.ios import CiscoIOSParser
 from src.rules.dhcp.dhcp_001 import DHCP001GloballyInactiveRule
+from src.rules.dhcp.dhcp_002 import DHCP002AccessVlanNotCoveredRule
 from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
 
 
@@ -10,6 +11,7 @@ class AnalyzerService:
 
         self.rules = [
             DHCP001GloballyInactiveRule(),
+            DHCP002AccessVlanNotCoveredRule(),
             DHCP003TrustedAccessPortRule(),
         ]
 

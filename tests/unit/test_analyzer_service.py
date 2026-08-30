@@ -53,3 +53,18 @@ ip dhcp snooping vlan 10
 
     assert len(findings) == 1
     assert findings[0].rule_id == "DHCP-001"
+
+
+def test_analyzer_produces_dhcp_002_finding():
+    raw_config = """ip dhcp snooping
+ip dhcp snooping vlan 10
+interface GigabitEthernet1/0/5
+ switchport mode access
+ switchport access vlan 20
+!
+"""
+
+    findings = AnalyzerService().analyze(raw_config)
+
+    assert len(findings) == 1
+    assert findings[0].rule_id == "DHCP-002"
