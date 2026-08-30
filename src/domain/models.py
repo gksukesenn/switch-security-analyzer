@@ -46,6 +46,8 @@ class InterfaceConfig:
 
     dhcp_snooping_trust: ConfigState = ConfigState.NOT_CONFIGURED
     port_security: ConfigState = ConfigState.NOT_CONFIGURED
+    portfast: ConfigState = ConfigState.NOT_CONFIGURED
+    bpdu_guard: ConfigState = ConfigState.NOT_CONFIGURED
 
     raw_lines: list[SourceLine] = field(default_factory=list)
 
@@ -62,6 +64,12 @@ class ParsedConfig:
     dhcp_snooping_vlans: set[int] = field(default_factory=set)
     dhcp_snooping_vlan_evidence: dict[int, SourceLine] = field(
         default_factory=dict)
+
+    portfast_default: ConfigState = ConfigState.NOT_CONFIGURED
+    portfast_default_evidence: SourceLine | None = None
+
+    bpdu_guard_default: ConfigState = ConfigState.NOT_CONFIGURED
+    bpdu_guard_default_evidence: SourceLine | None = None
 
     interfaces: list[InterfaceConfig] = field(default_factory=list)
 

@@ -208,12 +208,8 @@ interface GigabitEthernet1/0/21
 
     assert [finding.safe_config_example for finding in findings] == [
         "interface GigabitEthernet1/0/21\n"
-        " switchport mode access\n"
-        " switchport access vlan 20\n"
         " switchport port-security",
         "interface GigabitEthernet1/0/31\n"
-        " switchport mode access\n"
-        " switchport access vlan 30\n"
         " switchport port-security",
     ]
 
@@ -243,6 +239,16 @@ interface GigabitEthernet1/0/2
         "GigabitEthernet1/0/2",
         "GigabitEthernet1/0/10",
     ]
+    assert findings[0].safe_config_example == (
+        "interface GigabitEthernet1/0/1\n"
+        " switchport port-security\n"
+        "!\n"
+        "interface GigabitEthernet1/0/2\n"
+        " switchport port-security\n"
+        "!\n"
+        "interface GigabitEthernet1/0/10\n"
+        " switchport port-security"
+    )
 
 
 def test_portsec_001_contains_peer_and_affected_evidence():
@@ -275,7 +281,7 @@ interface GigabitEthernet1/0/2
     ]
 
 
-def test_portsec_001_safe_example_uses_actual_interface_and_vlan():
+def test_portsec_001_safe_example_uses_actual_interface():
     findings = evaluate("""interface GigabitEthernet1/0/1
  switchport mode access
  switchport access vlan 30
@@ -289,7 +295,5 @@ interface GigabitEthernet1/0/12
 
     assert findings[0].safe_config_example == (
         "interface GigabitEthernet1/0/12\n"
-        " switchport mode access\n"
-        " switchport access vlan 30\n"
         " switchport port-security"
     )

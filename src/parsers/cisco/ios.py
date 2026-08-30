@@ -73,6 +73,23 @@ class CiscoIOSParser:
                 elif stripped == "no switchport port-security":
                     current_interface.port_security = ConfigState.DISABLED
 
+                elif stripped in (
+                    "spanning-tree portfast",
+                    "spanning-tree portfast edge",
+                ):
+                    current_interface.portfast = ConfigState.ENABLED
+
+                elif stripped == "spanning-tree bpduguard enable":
+                    current_interface.bpdu_guard = ConfigState.ENABLED
+
+                elif stripped == "spanning-tree bpduguard disable":
+                    current_interface.bpdu_guard = ConfigState.DISABLED
+
+                elif stripped == "no spanning-tree bpduguard":
+                    current_interface.bpdu_guard = (
+                        ConfigState.NOT_CONFIGURED
+                    )
+
                 else:
                     config.unparsed_lines.append(source_line)
 
@@ -118,6 +135,34 @@ class CiscoIOSParser:
                     config.dhcp_snooping_vlan_evidence[vlan_id] = source_line
                 except ValueError:
                     config.unparsed_lines.append(source_line)
+
+            elif stripped in (
+                "spanning-tree portfast default",
+                "spanning-tree portfast edge default",
+            ):
+                config.portfast_default = ConfigState.ENABLED
+                config.portfast_default_evidence = source_line
+
+            elif stripped in (
+                "no spanning-tree portfast default",
+                "no spanning-tree portfast edge default",
+            ):
+                config.portfast_default = ConfigState.DISABLED
+                config.portfast_default_evidence = source_line
+
+            elif stripped in (
+                "spanning-tree portfast bpduguard default",
+                "spanning-tree portfast edge bpduguard default",
+            ):
+                config.bpdu_guard_default = ConfigState.ENABLED
+                config.bpdu_guard_default_evidence = source_line
+
+            elif stripped in (
+                "no spanning-tree portfast bpduguard default",
+                "no spanning-tree portfast edge bpduguard default",
+            ):
+                config.bpdu_guard_default = ConfigState.DISABLED
+                config.bpdu_guard_default_evidence = source_line
 
             else:
                 config.unparsed_lines.append(source_line)

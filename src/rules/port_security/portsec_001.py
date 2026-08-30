@@ -60,8 +60,7 @@ class PORTSEC001InconsistentCoverageRule:
                 affected_interfaces,
             )
             safe_config_example = self._build_safe_config_example(
-                affected_interfaces,
-                vlan_id,
+                affected_interfaces
             )
 
             findings.append(
@@ -124,13 +123,10 @@ class PORTSEC001InconsistentCoverageRule:
     @staticmethod
     def _build_safe_config_example(
         affected_interfaces: list[InterfaceConfig],
-        vlan_id: int,
     ) -> str:
         return "\n!\n".join(
             (
                 f"interface {interface.name}\n"
-                " switchport mode access\n"
-                f" switchport access vlan {vlan_id}\n"
                 " switchport port-security"
             )
             for interface in affected_interfaces

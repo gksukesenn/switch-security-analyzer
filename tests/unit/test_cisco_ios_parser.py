@@ -76,3 +76,65 @@ interface GigabitEthernet1/0/3
         config.interfaces[2].port_security
         == ConfigState.NOT_CONFIGURED
     )
+
+
+def test_parser_reads_interface_portfast_and_bpdu_guard_states():
+    raw_config = """interface GigabitEthernet1/0/1
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0/2
+ spanning-tree portfast edge
+ spanning-tree bpduguard disable
+!
+interface GigabitEthernet1/0/3
+ spanning-tree bpduguard enable
+ no spanning-tree bpduguard
+!
+"""
+
+    config = CiscoIOSParser().parse(raw_config)
+
+    assert config.interfaces[0].portfast == ConfigState.ENABLED
+    assert config.interfaces[0].bpdu_guard == ConfigState.ENABLED
+    assert config.interfaces[1].portfast == ConfigState.ENABLED
+    assert config.interfaces[1].bpdu_guard == ConfigState.DISABLED
+    assert (
+        config.interfaces[2].bpdu_guard
+        == ConfigState.NOT_CONFIGURED
+    )
+
+
+def test_parser_reads_global_portfast_and_bpdu_guard_defaults():
+    raw_config = """spanning-tree portfast edge default
+spanning-tree portfast bpduguard default
+"""
+
+    config = CiscoIOSParser().parse(raw_config)
+
+    assert config.portfast_default == ConfigState.ENABLED
+    assert config.bpdu_guard_default == ConfigState.ENABLED
+    assert config.portfast_default_evidence is not None
+    assert config.portfast_default_evidence.line_number == 1
+    assert config.bpdu_guard_default_evidence is not None
+    assert config.bpdu_guard_default_evidence.line_number == 2
+
+
+def test_parser_reads_combined_bpdu_guard_default_without_inventing_portfast():
+    config = CiscoIOSParser().parse(
+        "spanning-tree portfast edge bpduguard default"
+    )
+
+    assert config.bpdu_guard_default == ConfigState.ENABLED
+    assert config.portfast_default == ConfigState.NOT_CONFIGURED
+
+
+def test_parser_reads_disabled_global_stp_defaults():
+    raw_config = """no spanning-tree portfast edge default
+no spanning-tree portfast edge bpduguard default
+"""
+
+    config = CiscoIOSParser().parse(raw_config)
+
+    assert config.portfast_default == ConfigState.DISABLED
+    assert config.bpdu_guard_default == ConfigState.DISABLED

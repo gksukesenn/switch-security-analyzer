@@ -23,3 +23,10 @@ explicit disabled state remains distinguishable through its source evidence.
 The rule uses `MEDIUM` confidence because of these limitations. Its heuristic
 may be recalibrated when representative configuration corpora and additional
 access-control context become available.
+
+## STP-001 — Initial effective-state scope
+
+STP-001 evaluates PortFast edge intent only on interfaces explicitly parsed as
+access ports. PortFast trunk and other platform-specific PortFast variants are
+outside the initial scope. Unrecognized syntax remains unparsed rather than
+being inferred as enabled or disabled.

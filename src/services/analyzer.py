@@ -6,6 +6,7 @@ from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
 from src.rules.port_security.portsec_001 import (
     PORTSEC001InconsistentCoverageRule,
 )
+from src.rules.stp.stp_001 import STP001PortFastWithoutBPDUGuardRule
 
 
 class AnalyzerService:
@@ -17,6 +18,7 @@ class AnalyzerService:
             DHCP002AccessVlanNotCoveredRule(),
             DHCP003TrustedAccessPortRule(),
             PORTSEC001InconsistentCoverageRule(),
+            STP001PortFastWithoutBPDUGuardRule(),
         ]
 
     def analyze(self, raw_text: str) -> list[Finding]:

@@ -86,3 +86,16 @@ interface GigabitEthernet1/0/2
 
     assert len(findings) == 1
     assert findings[0].rule_id == "PORTSEC-001"
+
+
+def test_analyzer_produces_stp_001_finding():
+    raw_config = """interface GigabitEthernet1/0/5
+ switchport mode access
+ spanning-tree portfast edge
+!
+"""
+
+    findings = AnalyzerService().analyze(raw_config)
+
+    assert len(findings) == 1
+    assert findings[0].rule_id == "STP-001"
