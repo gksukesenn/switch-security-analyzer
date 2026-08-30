@@ -138,3 +138,27 @@ no spanning-tree portfast edge bpduguard default
 
     assert config.portfast_default == ConfigState.DISABLED
     assert config.bpdu_guard_default == ConfigState.DISABLED
+
+
+def test_parser_reads_simple_dai_vlan_scope_with_evidence():
+    config = CiscoIOSParser().parse(
+        "hostname ACCESS-SW-01\nip arp inspection vlan 20"
+    )
+
+    assert config.dai_vlans == {20}
+    assert config.dai_vlan_evidence[20].line_number == 2
+    assert (
+        config.dai_vlan_evidence[20].text
+        == "ip arp inspection vlan 20"
+    )
+
+
+def test_parser_does_not_treat_unsupported_arp_inspection_as_vlan_scope():
+    raw_config = """ip arp inspection vlan 10,20
+ip arp inspection validate src-mac
+"""
+
+    config = CiscoIOSParser().parse(raw_config)
+
+    assert config.dai_vlans == set()
+    assert [line.line_number for line in config.unparsed_lines] == [1, 2]

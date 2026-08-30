@@ -30,3 +30,16 @@ STP-001 evaluates PortFast edge intent only on interfaces explicitly parsed as
 access ports. PortFast trunk and other platform-specific PortFast variants are
 outside the initial scope. Unrecognized syntax remains unparsed rather than
 being inferred as enabled or disabled.
+
+## DAI-001 — One-way DHCP Snooping correlation
+
+DAI-001 checks only for DHCP Snooping-protected endpoint VLANs that lack
+Dynamic ARP Inspection coverage. It does not check the reverse direction:
+DAI configured on a VLAN without DHCP Snooping backing or binding context.
+
+That reverse condition may introduce availability, false-deny, or connectivity
+risks when binding information is incomplete, but it requires a separate
+future rule or correlation check.
+
+The static model does not yet fully evaluate statically addressed hosts, ARP
+ACLs, or other compensating ARP-validation mechanisms.

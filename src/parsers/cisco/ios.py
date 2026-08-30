@@ -136,6 +136,19 @@ class CiscoIOSParser:
                 except ValueError:
                     config.unparsed_lines.append(source_line)
 
+            elif stripped.startswith("ip arp inspection vlan "):
+                vlan_text = stripped.removeprefix(
+                    "ip arp inspection vlan "
+                ).strip()
+
+                try:
+                    vlan_id = int(vlan_text)
+
+                    config.dai_vlans.add(vlan_id)
+                    config.dai_vlan_evidence[vlan_id] = source_line
+                except ValueError:
+                    config.unparsed_lines.append(source_line)
+
             elif stripped in (
                 "spanning-tree portfast default",
                 "spanning-tree portfast edge default",

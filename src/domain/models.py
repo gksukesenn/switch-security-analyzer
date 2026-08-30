@@ -65,6 +65,10 @@ class ParsedConfig:
     dhcp_snooping_vlan_evidence: dict[int, SourceLine] = field(
         default_factory=dict)
 
+    dai_vlans: set[int] = field(default_factory=set)
+    dai_vlan_evidence: dict[int, SourceLine] = field(
+        default_factory=dict)
+
     portfast_default: ConfigState = ConfigState.NOT_CONFIGURED
     portfast_default_evidence: SourceLine | None = None
 

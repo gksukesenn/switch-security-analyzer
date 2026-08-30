@@ -12,6 +12,7 @@ interface GigabitEthernet1/0/5
  switchport access vlan 10
  ip dhcp snooping trust
 !
+ip arp inspection vlan 10
 """
 
     analyzer = AnalyzerService()
@@ -32,6 +33,7 @@ interface GigabitEthernet1/0/5
  switchport mode access
  switchport access vlan 10
 !
+ip arp inspection vlan 10
 """
 
     analyzer = AnalyzerService()
@@ -99,3 +101,18 @@ def test_analyzer_produces_stp_001_finding():
 
     assert len(findings) == 1
     assert findings[0].rule_id == "STP-001"
+
+
+def test_analyzer_produces_dai_001_finding():
+    raw_config = """ip dhcp snooping
+ip dhcp snooping vlan 20
+interface GigabitEthernet1/0/5
+ switchport mode access
+ switchport access vlan 20
+!
+"""
+
+    findings = AnalyzerService().analyze(raw_config)
+
+    assert len(findings) == 1
+    assert findings[0].rule_id == "DAI-001"

@@ -37,6 +37,8 @@ def test_parsed_config_can_store_dhcp_information():
     assert config.hostname == "ACCESS-SW-01"
     assert config.dhcp_snooping_global == ConfigState.ENABLED
     assert config.dhcp_snooping_vlans == {10}
+    assert config.dai_vlans == set()
+    assert config.dai_vlan_evidence == {}
 
     assert len(config.interfaces) == 1
     assert config.interfaces[0].mode == InterfaceMode.ACCESS

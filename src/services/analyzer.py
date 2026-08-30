@@ -1,5 +1,6 @@
 from src.domain.models import Finding
 from src.parsers.cisco.ios import CiscoIOSParser
+from src.rules.dai.dai_001 import DAI001DhcpVlanWithoutDAIRule
 from src.rules.dhcp.dhcp_001 import DHCP001GloballyInactiveRule
 from src.rules.dhcp.dhcp_002 import DHCP002AccessVlanNotCoveredRule
 from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
@@ -19,6 +20,7 @@ class AnalyzerService:
             DHCP003TrustedAccessPortRule(),
             PORTSEC001InconsistentCoverageRule(),
             STP001PortFastWithoutBPDUGuardRule(),
+            DAI001DhcpVlanWithoutDAIRule(),
         ]
 
     def analyze(self, raw_text: str) -> list[Finding]:
