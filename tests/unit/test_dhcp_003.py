@@ -5,12 +5,12 @@ from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
 def test_dhcp_003_finds_trusted_access_port():
     raw_config = """hostname ACCESS-SW-01
 ip dhcp snooping
-ip dhcp snooping vlan 10
+ip dhcp snooping vlan 30
 !
-interface GigabitEthernet1/0/5
+interface GigabitEthernet1/0/22
  description USER-PC
  switchport mode access
- switchport access vlan 10
+ switchport access vlan 30
  ip dhcp snooping trust
 !
 """
@@ -27,8 +27,14 @@ interface GigabitEthernet1/0/5
 
     assert finding.rule_id == "DHCP-003"
     assert finding.affected_interfaces == [
-        "GigabitEthernet1/0/5"
+        "GigabitEthernet1/0/22"
     ]
+    assert finding.safe_config_example == (
+        "interface GigabitEthernet1/0/22\n"
+        " switchport mode access\n"
+        " switchport access vlan 30"
+    )
+    assert "ip dhcp snooping trust" not in finding.safe_config_example
 
 
 def test_dhcp_003_does_not_fire_when_vlan_is_not_protected():

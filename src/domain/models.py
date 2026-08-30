@@ -78,6 +78,7 @@ class Finding:
 
     technical_impact: str
     remediation: str
+    safe_config_example: str
 
     evidence: list[SourceLine] = field(default_factory=list)
     affected_interfaces: list[str] = field(default_factory=list)

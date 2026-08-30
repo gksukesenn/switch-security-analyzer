@@ -51,6 +51,10 @@ def main() -> None:
         print(f"  {finding.remediation}")
 
         print()
+        print("Safe configuration example:")
+        print(finding.safe_config_example)
+
+        print()
         print("Evidence:")
         for evidence in finding.evidence:
             print(

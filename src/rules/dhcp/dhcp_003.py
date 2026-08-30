@@ -64,6 +64,11 @@ class DHCP003TrustedAccessPortRule:
                     "Snooping trust. Trust should be limited to authorized "
                     "DHCP server paths."
                 ),
+                safe_config_example=(
+                    f"interface {interface.name}\n"
+                    " switchport mode access\n"
+                    f" switchport access vlan {interface.access_vlan}"
+                ),
                 evidence=evidence,
                 affected_interfaces=[interface.name],
             )

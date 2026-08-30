@@ -18,6 +18,10 @@ def test_cli_prints_dhcp_003_finding(monkeypatch, capsys):
     assert "Severity:   HIGH" in output
     assert "Confidence: MEDIUM" in output
     assert "  - GigabitEthernet1/0/5" in output
+    assert "Safe configuration example:" in output
+    assert "interface GigabitEthernet1/0/5\n" in output
+    assert " switchport mode access\n" in output
+    assert " switchport access vlan 10\n" in output
     assert "  line 2: ip dhcp snooping" in output
     assert "  line 9: ip dhcp snooping trust" in output
 

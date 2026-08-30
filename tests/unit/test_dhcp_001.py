@@ -21,6 +21,10 @@ ip dhcp snooping vlan 10
     assert finding.category == "DHCP_SPOOFING"
     assert finding.severity == Severity.HIGH
     assert finding.confidence == Confidence.HIGH
+    assert finding.safe_config_example == (
+        "ip dhcp snooping\n"
+        "ip dhcp snooping vlan 10"
+    )
 
 
 def test_dhcp_001_finds_not_configured_global_with_vlan_scope():
@@ -41,6 +45,23 @@ interface GigabitEthernet1/0/48
 
     assert len(findings) == 1
     assert findings[0].rule_id == "DHCP-001"
+    assert findings[0].safe_config_example == (
+        "ip dhcp snooping\n"
+        "ip dhcp snooping vlan <intended-vlan-id>"
+    )
+
+
+def test_dhcp_001_safe_example_uses_sorted_vlan_scope():
+    findings = evaluate("""hostname ACCESS-SW-01
+ip dhcp snooping vlan 20
+ip dhcp snooping vlan 10
+""")
+
+    assert findings[0].safe_config_example == (
+        "ip dhcp snooping\n"
+        "ip dhcp snooping vlan 10\n"
+        "ip dhcp snooping vlan 20"
+    )
 
 
 def test_dhcp_001_does_not_fire_when_global_is_enabled():

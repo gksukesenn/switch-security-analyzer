@@ -45,6 +45,21 @@ class DHCP001GloballyInactiveRule:
 
         evidence.sort(key=lambda line: line.line_number)
 
+        safe_vlan_scope = [
+            f"ip dhcp snooping vlan {vlan_id}"
+            for vlan_id in sorted(config.dhcp_snooping_vlans)
+        ]
+
+        if not safe_vlan_scope:
+            safe_vlan_scope.append(
+                "ip dhcp snooping vlan <intended-vlan-id>"
+            )
+
+        safe_config_example = "\n".join([
+            "ip dhcp snooping",
+            *safe_vlan_scope,
+        ])
+
         return [
             Finding(
                 rule_id=self.rule_id,
@@ -63,6 +78,7 @@ class DHCP001GloballyInactiveRule:
                     "DHCP Snooping globally and verify the intended VLAN "
                     "scope and trusted DHCP server paths."
                 ),
+                safe_config_example=safe_config_example,
                 evidence=evidence,
             )
         ]
