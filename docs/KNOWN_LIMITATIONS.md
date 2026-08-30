@@ -47,10 +47,21 @@ ACLs, or other compensating ARP-validation mechanisms.
 ## IPSG-001 — Basic DHCP-backed source validation
 
 IPSG-001 evaluates basic IP Source Guard coverage on endpoint access
-interfaces in DHCP Snooping-protected VLANs. Platform- and release-specific
-forms such as `ip verify source port-security`, `ip verify source mac-check`,
-and device-tracking-based source guards are not fully analyzed in the initial
-MVP.
+interfaces in DHCP Snooping-protected VLANs. The basic interface-level
+`ip verify source` and `no ip verify source` syntax has been verified for
+relevant Cisco IOS XE Catalyst platforms, including the Catalyst 3650- and
+9200-class documentation used during research.
+
+Catalyst 2960-X and 2960-XR use classic Cisco IOS 15.2E rather than Cisco IOS
+XE and may expose additional `ip verify source [...]` option syntax. Other
+Catalyst families and releases may also expose different IPSG command forms.
+These platform-specific variants are not fully modeled by the current parser.
+
+The parser currently recognizes only the verified exact basic forms
+`ip verify source` and `no ip verify source`. Unsupported variants may remain
+in `unparsed_lines`. Forms such as `ip verify source port-security`,
+`ip verify source mac-check`, and device-tracking-based source guards are not
+fully analyzed in the initial MVP.
 
 Static IP/source bindings and other compensating source-validation mechanisms
 are not yet fully modeled. A DHCP Snooping-protected VLAN does not by itself
