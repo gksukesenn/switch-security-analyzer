@@ -58,6 +58,29 @@ interface GigabitEthernet1/0/1
     ]
 
 
+def test_dhcp_002_naturally_sorts_affected_interfaces():
+    findings = evaluate("""ip dhcp snooping
+interface GigabitEthernet1/0/1
+ switchport mode access
+ switchport access vlan 20
+!
+interface GigabitEthernet1/0/10
+ switchport mode access
+ switchport access vlan 20
+!
+interface GigabitEthernet1/0/2
+ switchport mode access
+ switchport access vlan 20
+!
+""")
+
+    assert findings[0].affected_interfaces == [
+        "GigabitEthernet1/0/1",
+        "GigabitEthernet1/0/2",
+        "GigabitEthernet1/0/10",
+    ]
+
+
 def test_dhcp_002_orders_findings_by_uncovered_vlan():
     findings = evaluate("""ip dhcp snooping
 interface GigabitEthernet1/0/30
