@@ -147,3 +147,18 @@ def test_analyzer_produces_mgmt_001_finding():
 
     assert len(findings) == 1
     assert findings[0].rule_id == "MGMT-001"
+
+
+def test_analyzer_registers_mgmt_002_after_mgmt_001():
+    raw_config = """ip http server
+line vty 0 4
+ transport input telnet
+!
+"""
+
+    findings = AnalyzerService().analyze(raw_config)
+
+    assert [finding.rule_id for finding in findings] == [
+        "MGMT-001",
+        "MGMT-002",
+    ]

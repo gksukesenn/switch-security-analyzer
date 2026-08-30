@@ -90,3 +90,28 @@ For `transport input all`, the normalized protocol set represents only the
 security-relevant subset currently modeled by the analyzer (including SSH and
 Telnet); it is not intended to be an exhaustive inventory of every Cisco
 terminal transport protocol.
+
+## MGMT-002 — Explicit standard HTTP server enablement only
+
+MGMT-002 intentionally reports only explicit `ip http server` configuration.
+Cisco HTTP-server defaults vary by platform and release. Cisco Catalyst
+2960-X IOS 15.2(6)E documentation used during research explicitly documents
+the standard HTTP server as enabled in its default SSL configuration. Cisco
+IOS-XE Catalyst 3650 documentation used during research describes the
+standard HTTP server as typically disabled by default.
+
+Therefore, a device whose HTTP service is active solely because of
+platform/release default behavior may not be reported by MGMT-002. `HIGH`
+confidence describes the reliability of a produced explicit finding; it does
+not mean detection coverage is complete across Cisco platforms. Default-aware
+interpretation will require platform/release identification.
+
+Management reachability, HTTP ACL/access-class, authentication configuration,
+and HTTPS TLS/certificate quality are not evaluated.
+
+## Future default-aware controls
+
+Some future controls such as CDP/LLDP may require default-aware
+interpretation. Absence-based detection must only be introduced when the
+vendor/platform/release default has been authoritatively verified and the
+analyzed device profile is known with sufficient confidence.

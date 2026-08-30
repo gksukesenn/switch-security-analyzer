@@ -319,3 +319,34 @@ def test_parser_does_not_treat_console_line_as_vty():
 
     assert config.vty_lines == []
     assert [line.line_number for line in config.unparsed_lines] == [1, 2]
+
+
+def test_parser_maps_exact_http_and_https_server_commands_independently():
+    config = CiscoIOSParser().parse("""ip http server
+no ip http secure-server
+""")
+
+    assert config.http_server == ConfigState.ENABLED
+    assert config.http_server_evidence.line_number == 1
+    assert config.http_server_evidence.text == "ip http server"
+    assert config.https_server == ConfigState.DISABLED
+    assert config.https_server_evidence.line_number == 2
+
+
+def test_parser_maps_exact_disabled_http_and_enabled_https_commands():
+    config = CiscoIOSParser().parse("""no ip http server
+ip http secure-server
+""")
+
+    assert config.http_server == ConfigState.DISABLED
+    assert config.http_server_evidence.line_number == 1
+    assert config.https_server == ConfigState.ENABLED
+    assert config.https_server_evidence.line_number == 2
+
+
+def test_parser_does_not_treat_unrelated_ip_http_command_as_server_state():
+    config = CiscoIOSParser().parse("ip http authentication local\n")
+
+    assert config.http_server == ConfigState.NOT_CONFIGURED
+    assert config.https_server == ConfigState.NOT_CONFIGURED
+    assert [line.line_number for line in config.unparsed_lines] == [1]

@@ -51,6 +51,15 @@ def test_parsed_config_can_store_dhcp_information():
     )
 
 
+def test_management_server_states_default_to_not_configured():
+    config = ParsedConfig(vendor="cisco_ios")
+
+    assert config.http_server == ConfigState.NOT_CONFIGURED
+    assert config.https_server == ConfigState.NOT_CONFIGURED
+    assert config.http_server_evidence is None
+    assert config.https_server_evidence is None
+
+
 def test_vty_defaults_to_transport_not_configured():
     vty = VtyConfig(start=0, end=4)
 

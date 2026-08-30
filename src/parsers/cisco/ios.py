@@ -169,6 +169,22 @@ class CiscoIOSParser:
                 config.dhcp_snooping_global = ConfigState.DISABLED
                 config.dhcp_snooping_global_evidence = source_line
 
+            elif stripped == "ip http server":
+                config.http_server = ConfigState.ENABLED
+                config.http_server_evidence = source_line
+
+            elif stripped == "no ip http server":
+                config.http_server = ConfigState.DISABLED
+                config.http_server_evidence = source_line
+
+            elif stripped == "ip http secure-server":
+                config.https_server = ConfigState.ENABLED
+                config.https_server_evidence = source_line
+
+            elif stripped == "no ip http secure-server":
+                config.https_server = ConfigState.DISABLED
+                config.https_server_evidence = source_line
+
             elif stripped.startswith("ip dhcp snooping vlan "):
                 vlan_text = stripped.removeprefix(
                     "ip dhcp snooping vlan "

@@ -76,6 +76,12 @@ class ParsedConfig:
     dhcp_snooping_global: ConfigState = ConfigState.NOT_CONFIGURED
     dhcp_snooping_global_evidence: SourceLine | None = None
 
+    http_server: ConfigState = ConfigState.NOT_CONFIGURED
+    http_server_evidence: SourceLine | None = None
+
+    https_server: ConfigState = ConfigState.NOT_CONFIGURED
+    https_server_evidence: SourceLine | None = None
+
     dhcp_snooping_vlans: set[int] = field(default_factory=set)
     dhcp_snooping_vlan_evidence: dict[int, SourceLine] = field(
         default_factory=dict)

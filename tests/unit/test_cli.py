@@ -57,3 +57,27 @@ def test_cli_omits_empty_affected_interfaces_for_management_finding(
     assert "Affected interfaces:" not in output
     assert "line vty 0 4" in output
     assert " transport input ssh" in output
+
+
+def test_cli_prints_mgmt_002_without_empty_affected_interfaces(
+    monkeypatch,
+    capsys,
+):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["cli", "samples/cisco/mgmt_002_http_enabled.cfg"],
+    )
+
+    main()
+
+    output = capsys.readouterr().out
+    assert "Rule:       MGMT-002" in output
+    assert "Severity:   HIGH" in output
+    assert "Confidence: HIGH" in output
+    assert "Affected interfaces:" not in output
+    assert "Technical impact:" in output
+    assert "Remediation:" in output
+    assert "Safe configuration example:\nno ip http server" in output
+    assert "Evidence:" in output
+    assert "line 2: ip http server" in output
