@@ -67,6 +67,12 @@ class CiscoIOSParser:
                         ConfigState.DISABLED
                     )
 
+                elif stripped == "switchport port-security":
+                    current_interface.port_security = ConfigState.ENABLED
+
+                elif stripped == "no switchport port-security":
+                    current_interface.port_security = ConfigState.DISABLED
+
                 else:
                     config.unparsed_lines.append(source_line)
 

@@ -55,3 +55,24 @@ interface GigabitEthernet1/0/5
         == "ip dhcp snooping vlan 10"
     )
 
+
+def test_parser_reads_port_security_states():
+    raw_config = """interface GigabitEthernet1/0/1
+ switchport port-security
+!
+interface GigabitEthernet1/0/2
+ no switchport port-security
+!
+interface GigabitEthernet1/0/3
+ description NO-PORT-SECURITY-COMMAND
+!
+"""
+
+    config = CiscoIOSParser().parse(raw_config)
+
+    assert config.interfaces[0].port_security == ConfigState.ENABLED
+    assert config.interfaces[1].port_security == ConfigState.DISABLED
+    assert (
+        config.interfaces[2].port_security
+        == ConfigState.NOT_CONFIGURED
+    )

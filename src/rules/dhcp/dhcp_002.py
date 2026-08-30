@@ -1,5 +1,3 @@
-import re
-
 from src.domain.models import (
     Confidence,
     ConfigState,
@@ -10,13 +8,7 @@ from src.domain.models import (
     Severity,
     SourceLine,
 )
-
-
-def _natural_sort_key(value: str) -> tuple[tuple[int, str | int], ...]:
-    return tuple(
-        (1, int(part)) if part.isdigit() else (0, part.casefold())
-        for part in re.split(r"(\d+)", value)
-    )
+from src.utils import natural_sort_key
 
 
 class DHCP002AccessVlanNotCoveredRule:
@@ -51,7 +43,7 @@ class DHCP002AccessVlanNotCoveredRule:
         for vlan_id in sorted(interfaces_by_vlan):
             interfaces = sorted(
                 interfaces_by_vlan[vlan_id],
-                key=lambda interface: _natural_sort_key(interface.name),
+                key=lambda interface: natural_sort_key(interface.name),
             )
             evidence = self._collect_evidence(config, interfaces)
 

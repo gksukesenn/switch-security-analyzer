@@ -68,3 +68,21 @@ interface GigabitEthernet1/0/5
 
     assert len(findings) == 1
     assert findings[0].rule_id == "DHCP-002"
+
+
+def test_analyzer_produces_portsec_001_finding():
+    raw_config = """interface GigabitEthernet1/0/1
+ switchport mode access
+ switchport access vlan 20
+ switchport port-security
+!
+interface GigabitEthernet1/0/2
+ switchport mode access
+ switchport access vlan 20
+!
+"""
+
+    findings = AnalyzerService().analyze(raw_config)
+
+    assert len(findings) == 1
+    assert findings[0].rule_id == "PORTSEC-001"

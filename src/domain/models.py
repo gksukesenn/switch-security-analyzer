@@ -45,6 +45,7 @@ class InterfaceConfig:
     access_vlan: int | None = None
 
     dhcp_snooping_trust: ConfigState = ConfigState.NOT_CONFIGURED
+    port_security: ConfigState = ConfigState.NOT_CONFIGURED
 
     raw_lines: list[SourceLine] = field(default_factory=list)
 
