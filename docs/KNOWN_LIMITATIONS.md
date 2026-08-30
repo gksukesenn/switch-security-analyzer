@@ -43,3 +43,17 @@ future rule or correlation check.
 
 The static model does not yet fully evaluate statically addressed hosts, ARP
 ACLs, or other compensating ARP-validation mechanisms.
+
+## IPSG-001 — Basic DHCP-backed source validation
+
+IPSG-001 evaluates basic IP Source Guard coverage on endpoint access
+interfaces in DHCP Snooping-protected VLANs. Platform- and release-specific
+forms such as `ip verify source port-security`, `ip verify source mac-check`,
+and device-tracking-based source guards are not fully analyzed in the initial
+MVP.
+
+Static IP/source bindings and other compensating source-validation mechanisms
+are not yet fully modeled. A DHCP Snooping-protected VLAN does not by itself
+prove that organizational policy requires IP Source Guard, so the rule uses
+`MEDIUM` confidence. Reverse and configuration-health scenarios remain topics
+for separate future rules.

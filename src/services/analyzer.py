@@ -4,6 +4,9 @@ from src.rules.dai.dai_001 import DAI001DhcpVlanWithoutDAIRule
 from src.rules.dhcp.dhcp_001 import DHCP001GloballyInactiveRule
 from src.rules.dhcp.dhcp_002 import DHCP002AccessVlanNotCoveredRule
 from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
+from src.rules.ip_source_guard.ipsg_001 import (
+    IPSG001DhcpEndpointWithoutIPSGRule,
+)
 from src.rules.port_security.portsec_001 import (
     PORTSEC001InconsistentCoverageRule,
 )
@@ -21,6 +24,7 @@ class AnalyzerService:
             PORTSEC001InconsistentCoverageRule(),
             STP001PortFastWithoutBPDUGuardRule(),
             DAI001DhcpVlanWithoutDAIRule(),
+            IPSG001DhcpEndpointWithoutIPSGRule(),
         ]
 
     def analyze(self, raw_text: str) -> list[Finding]:

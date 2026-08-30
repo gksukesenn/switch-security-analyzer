@@ -90,6 +90,12 @@ class CiscoIOSParser:
                         ConfigState.NOT_CONFIGURED
                     )
 
+                elif stripped == "ip verify source":
+                    current_interface.ip_source_guard = ConfigState.ENABLED
+
+                elif stripped == "no ip verify source":
+                    current_interface.ip_source_guard = ConfigState.DISABLED
+
                 else:
                     config.unparsed_lines.append(source_line)
 

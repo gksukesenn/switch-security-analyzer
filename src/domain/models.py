@@ -48,6 +48,7 @@ class InterfaceConfig:
     port_security: ConfigState = ConfigState.NOT_CONFIGURED
     portfast: ConfigState = ConfigState.NOT_CONFIGURED
     bpdu_guard: ConfigState = ConfigState.NOT_CONFIGURED
+    ip_source_guard: ConfigState = ConfigState.NOT_CONFIGURED
 
     raw_lines: list[SourceLine] = field(default_factory=list)
 

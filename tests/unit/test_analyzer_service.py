@@ -32,6 +32,7 @@ interface GigabitEthernet1/0/5
  description USER-PC
  switchport mode access
  switchport access vlan 10
+ ip verify source
 !
 ip arp inspection vlan 10
 """
@@ -63,6 +64,7 @@ ip dhcp snooping vlan 10
 interface GigabitEthernet1/0/5
  switchport mode access
  switchport access vlan 20
+ ip verify source
 !
 """
 
@@ -109,6 +111,7 @@ ip dhcp snooping vlan 20
 interface GigabitEthernet1/0/5
  switchport mode access
  switchport access vlan 20
+ ip verify source
 !
 """
 
@@ -116,3 +119,19 @@ interface GigabitEthernet1/0/5
 
     assert len(findings) == 1
     assert findings[0].rule_id == "DAI-001"
+
+
+def test_analyzer_produces_ipsg_001_finding():
+    raw_config = """ip dhcp snooping
+ip dhcp snooping vlan 20
+ip arp inspection vlan 20
+interface GigabitEthernet1/0/5
+ switchport mode access
+ switchport access vlan 20
+!
+"""
+
+    findings = AnalyzerService().analyze(raw_config)
+
+    assert len(findings) == 1
+    assert findings[0].rule_id == "IPSG-001"

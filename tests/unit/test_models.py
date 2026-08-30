@@ -15,6 +15,7 @@ def test_interface_defaults_to_not_configured_dhcp_trust():
     assert interface.port_security == ConfigState.NOT_CONFIGURED
     assert interface.portfast == ConfigState.NOT_CONFIGURED
     assert interface.bpdu_guard == ConfigState.NOT_CONFIGURED
+    assert interface.ip_source_guard == ConfigState.NOT_CONFIGURED
 
 
 def test_parsed_config_can_store_dhcp_information():

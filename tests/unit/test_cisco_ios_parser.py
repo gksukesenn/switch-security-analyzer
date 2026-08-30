@@ -162,3 +162,43 @@ ip arp inspection validate src-mac
 
     assert config.dai_vlans == set()
     assert [line.line_number for line in config.unparsed_lines] == [1, 2]
+
+
+def test_parser_reads_exact_ip_source_guard_states():
+    raw_config = """interface GigabitEthernet1/0/1
+ ip verify source
+!
+interface GigabitEthernet1/0/2
+ no ip verify source
+!
+interface GigabitEthernet1/0/3
+ description NO-IPSG-COMMAND
+!
+"""
+
+    config = CiscoIOSParser().parse(raw_config)
+
+    assert config.interfaces[0].ip_source_guard == ConfigState.ENABLED
+    assert config.interfaces[1].ip_source_guard == ConfigState.DISABLED
+    assert (
+        config.interfaces[2].ip_source_guard
+        == ConfigState.NOT_CONFIGURED
+    )
+
+
+def test_parser_does_not_match_platform_ipsg_variants_as_basic_command():
+    raw_config = """interface GigabitEthernet1/0/1
+ ip verify source port-security
+!
+interface GigabitEthernet1/0/2
+ ip verify source mac-check
+!
+"""
+
+    config = CiscoIOSParser().parse(raw_config)
+
+    assert all(
+        interface.ip_source_guard == ConfigState.NOT_CONFIGURED
+        for interface in config.interfaces
+    )
+    assert [line.line_number for line in config.unparsed_lines] == [2, 5]
