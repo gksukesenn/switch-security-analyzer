@@ -39,3 +39,17 @@ interface GigabitEthernet1/0/5
     findings = analyzer.analyze(raw_config)
 
     assert findings == []
+
+
+def test_analyzer_produces_dhcp_001_finding():
+    raw_config = """hostname ACCESS-SW-01
+no ip dhcp snooping
+ip dhcp snooping vlan 10
+"""
+
+    analyzer = AnalyzerService()
+
+    findings = analyzer.analyze(raw_config)
+
+    assert len(findings) == 1
+    assert findings[0].rule_id == "DHCP-001"
