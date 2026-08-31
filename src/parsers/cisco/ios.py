@@ -50,10 +50,12 @@ class CiscoIOSParser:
 
                 elif stripped == "switchport mode access":
                     current_interface.mode = InterfaceMode.ACCESS
+                    current_interface.mode_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "switchport mode trunk":
                     current_interface.mode = InterfaceMode.TRUNK
+                    current_interface.mode_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped.startswith("switchport access vlan "):
@@ -63,6 +65,7 @@ class CiscoIOSParser:
 
                     try:
                         current_interface.access_vlan = int(vlan_text)
+                        current_interface.access_vlan_evidence = source_line
                         self._record_supported(config, source_line)
                     except ValueError:
                         config.unparsed_lines.append(source_line)
@@ -71,20 +74,24 @@ class CiscoIOSParser:
                     current_interface.dhcp_snooping_trust = (
                         ConfigState.ENABLED
                     )
+                    current_interface.dhcp_snooping_trust_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "no ip dhcp snooping trust":
                     current_interface.dhcp_snooping_trust = (
                         ConfigState.DISABLED
                     )
+                    current_interface.dhcp_snooping_trust_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "switchport port-security":
                     current_interface.port_security = ConfigState.ENABLED
+                    current_interface.port_security_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "no switchport port-security":
                     current_interface.port_security = ConfigState.DISABLED
+                    current_interface.port_security_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped in (
@@ -92,28 +99,34 @@ class CiscoIOSParser:
                     "spanning-tree portfast edge",
                 ):
                     current_interface.portfast = ConfigState.ENABLED
+                    current_interface.portfast_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "spanning-tree bpduguard enable":
                     current_interface.bpdu_guard = ConfigState.ENABLED
+                    current_interface.bpdu_guard_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "spanning-tree bpduguard disable":
                     current_interface.bpdu_guard = ConfigState.DISABLED
+                    current_interface.bpdu_guard_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "no spanning-tree bpduguard":
                     current_interface.bpdu_guard = (
                         ConfigState.NOT_CONFIGURED
                     )
+                    current_interface.bpdu_guard_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "ip verify source":
                     current_interface.ip_source_guard = ConfigState.ENABLED
+                    current_interface.ip_source_guard_evidence = source_line
                     self._record_supported(config, source_line)
 
                 elif stripped == "no ip verify source":
                     current_interface.ip_source_guard = ConfigState.DISABLED
+                    current_interface.ip_source_guard_evidence = source_line
                     self._record_supported(config, source_line)
 
                 else:
@@ -147,6 +160,7 @@ class CiscoIOSParser:
 
                 current_interface = InterfaceConfig(
                     name=interface_name,
+                    declaration_evidence=source_line,
                     raw_lines=[source_line],
                 )
 
@@ -170,6 +184,7 @@ class CiscoIOSParser:
                 current_vty = VtyConfig(
                     start=start,
                     end=end,
+                    declaration_evidence=source_line,
                     raw_lines=[source_line],
                 )
                 config.vty_lines.append(current_vty)

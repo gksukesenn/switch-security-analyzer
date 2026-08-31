@@ -46,12 +46,10 @@ class DHCP001GloballyInactiveRule:
         )
 
         for interface in trusted_interfaces:
-            evidence.extend(
-                line
-                for line in interface.raw_lines
-                if line.text.strip().startswith("interface ")
-                or line.text.strip() == "ip dhcp snooping trust"
-            )
+            evidence.extend(line for line in (
+                interface.declaration_evidence,
+                interface.dhcp_snooping_trust_evidence,
+            ) if line is not None)
 
         evidence.sort(key=lambda line: line.line_number)
 

@@ -118,14 +118,14 @@ class IPSG001DhcpEndpointWithoutIPSGRule:
             evidence.append(vlan_evidence)
 
         for interface in affected_interfaces:
-            evidence.extend(
-                line
-                for line in interface.raw_lines
-                if line.text.strip().startswith("interface ")
-                or line.text.strip() == "switchport mode access"
-                or line.text.strip().startswith("switchport access vlan ")
-                or line.text.strip() == "no ip verify source"
-            )
+            evidence.extend(line for line in (
+                interface.declaration_evidence,
+                interface.mode_evidence,
+                interface.access_vlan_evidence,
+                interface.ip_source_guard_evidence
+                if interface.ip_source_guard == ConfigState.DISABLED
+                else None,
+            ) if line is not None)
 
         evidence.sort(key=lambda line: line.line_number)
         return evidence

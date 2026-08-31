@@ -102,13 +102,11 @@ class DAI001DhcpVlanWithoutDAIRule:
             evidence.append(vlan_evidence)
 
         for interface in affected_interfaces:
-            evidence.extend(
-                line
-                for line in interface.raw_lines
-                if line.text.strip().startswith("interface ")
-                or line.text.strip() == "switchport mode access"
-                or line.text.strip().startswith("switchport access vlan ")
-            )
+            evidence.extend(line for line in (
+                interface.declaration_evidence,
+                interface.mode_evidence,
+                interface.access_vlan_evidence,
+            ) if line is not None)
 
         evidence.sort(key=lambda line: line.line_number)
         return evidence

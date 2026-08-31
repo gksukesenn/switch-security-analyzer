@@ -36,6 +36,17 @@ interface GigabitEthernet1/0/5
     assert interface.description == "USER-PC"
     assert interface.mode == InterfaceMode.ACCESS
     assert interface.access_vlan == 10
+    assert (interface.declaration_evidence.line_number,
+            interface.declaration_evidence.text) == (
+        5, "interface GigabitEthernet1/0/5")
+    assert (interface.mode_evidence.line_number,
+            interface.mode_evidence.text) == (7, " switchport mode access")
+    assert (interface.access_vlan_evidence.line_number,
+            interface.access_vlan_evidence.text) == (
+        8, " switchport access vlan 10")
+    assert (interface.dhcp_snooping_trust_evidence.line_number,
+            interface.dhcp_snooping_trust_evidence.text) == (
+        9, " ip dhcp snooping trust")
 
     assert (
         interface.dhcp_snooping_trust
@@ -72,10 +83,28 @@ interface GigabitEthernet1/0/3
 
     assert config.interfaces[0].port_security == ConfigState.ENABLED
     assert config.interfaces[1].port_security == ConfigState.DISABLED
+    assert config.interfaces[0].port_security_evidence.text == (
+        " switchport port-security")
+    assert config.interfaces[0].port_security_evidence.line_number == 2
+    assert config.interfaces[1].port_security_evidence.text == (
+        " no switchport port-security")
+    assert config.interfaces[1].port_security_evidence.line_number == 5
     assert (
         config.interfaces[2].port_security
         == ConfigState.NOT_CONFIGURED
     )
+
+
+def test_parser_maps_disabled_dhcp_trust_to_its_exact_source_line():
+    config = CiscoIOSParser().parse("""interface GigabitEthernet1/0/1
+ no ip dhcp snooping trust
+""")
+
+    interface = config.interfaces[0]
+    assert interface.dhcp_snooping_trust == ConfigState.DISABLED
+    assert interface.dhcp_snooping_trust_evidence.line_number == 2
+    assert interface.dhcp_snooping_trust_evidence.text == (
+        " no ip dhcp snooping trust")
 
 
 def test_parser_reads_interface_portfast_and_bpdu_guard_states():
@@ -99,10 +128,25 @@ interface GigabitEthernet1/0/3
     assert config.interfaces[0].bpdu_guard == ConfigState.ENABLED
     assert config.interfaces[1].portfast == ConfigState.ENABLED
     assert config.interfaces[1].bpdu_guard == ConfigState.DISABLED
+    assert config.interfaces[0].portfast_evidence.line_number == 2
+    assert config.interfaces[0].portfast_evidence.text == (
+        " spanning-tree portfast")
+    assert config.interfaces[1].portfast_evidence.line_number == 6
+    assert config.interfaces[1].portfast_evidence.text == (
+        " spanning-tree portfast edge")
+    assert config.interfaces[0].bpdu_guard_evidence.line_number == 3
+    assert config.interfaces[0].bpdu_guard_evidence.text == (
+        " spanning-tree bpduguard enable")
+    assert config.interfaces[1].bpdu_guard_evidence.line_number == 7
+    assert config.interfaces[1].bpdu_guard_evidence.text == (
+        " spanning-tree bpduguard disable")
     assert (
         config.interfaces[2].bpdu_guard
         == ConfigState.NOT_CONFIGURED
     )
+    assert config.interfaces[2].bpdu_guard_evidence.line_number == 11
+    assert config.interfaces[2].bpdu_guard_evidence.text == (
+        " no spanning-tree bpduguard")
 
 
 def test_parser_reads_global_portfast_and_bpdu_guard_defaults():
@@ -180,6 +224,12 @@ interface GigabitEthernet1/0/3
 
     assert config.interfaces[0].ip_source_guard == ConfigState.ENABLED
     assert config.interfaces[1].ip_source_guard == ConfigState.DISABLED
+    assert config.interfaces[0].ip_source_guard_evidence.line_number == 2
+    assert config.interfaces[0].ip_source_guard_evidence.text == (
+        " ip verify source")
+    assert config.interfaces[1].ip_source_guard_evidence.line_number == 5
+    assert config.interfaces[1].ip_source_guard_evidence.text == (
+        " no ip verify source")
     assert (
         config.interfaces[2].ip_source_guard
         == ConfigState.NOT_CONFIGURED

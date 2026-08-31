@@ -53,16 +53,26 @@ class SourceLine:
 class InterfaceConfig:
     name: str
 
+    declaration_evidence: SourceLine | None = None
+
     description: str | None = None
 
     mode: InterfaceMode = InterfaceMode.UNKNOWN
+    mode_evidence: SourceLine | None = None
     access_vlan: int | None = None
+    access_vlan_evidence: SourceLine | None = None
 
     dhcp_snooping_trust: ConfigState = ConfigState.NOT_CONFIGURED
     port_security: ConfigState = ConfigState.NOT_CONFIGURED
     portfast: ConfigState = ConfigState.NOT_CONFIGURED
     bpdu_guard: ConfigState = ConfigState.NOT_CONFIGURED
     ip_source_guard: ConfigState = ConfigState.NOT_CONFIGURED
+
+    dhcp_snooping_trust_evidence: SourceLine | None = None
+    port_security_evidence: SourceLine | None = None
+    portfast_evidence: SourceLine | None = None
+    bpdu_guard_evidence: SourceLine | None = None
+    ip_source_guard_evidence: SourceLine | None = None
 
     raw_lines: list[SourceLine] = field(default_factory=list)
 
@@ -71,6 +81,8 @@ class InterfaceConfig:
 class VtyConfig:
     start: int
     end: int
+
+    declaration_evidence: SourceLine | None = None
 
     # ENABLED means an explicit, non-empty transport directive was fully
     # normalized; it does not mean the management configuration is secure.

@@ -1,5 +1,12 @@
 # Rule Authoring
 
+## Normalized provenance
+
+Rules should consume normalized field provenance rather than vendor-specific
+command text whenever parser-normalized evidence exists. A vendor parser owns
+the mapping from its syntax to both the normalized field and the corresponding
+`SourceLine`; rules should not need to know which vendor syntax produced them.
+
 ## Safe configuration examples
 
 `safe_config_example` is a minimal, context-aware remediation snippet. It

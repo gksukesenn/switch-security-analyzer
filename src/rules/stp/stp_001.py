@@ -142,18 +142,15 @@ class STP001PortFastWithoutBPDUGuardRule:
             evidence.append(config.bpdu_guard_default_evidence)
 
         for interface in affected_interfaces:
-            evidence.extend(
-                line
-                for line in interface.raw_lines
-                if line.text.strip().startswith("interface ")
-                or line.text.strip() == "switchport mode access"
-                or line.text.strip().startswith("switchport access vlan ")
-                or line.text.strip() in (
-                    "spanning-tree portfast",
-                    "spanning-tree portfast edge",
-                    "spanning-tree bpduguard disable",
-                )
-            )
+            evidence.extend(line for line in (
+                interface.declaration_evidence,
+                interface.mode_evidence,
+                interface.access_vlan_evidence,
+                interface.portfast_evidence
+                if interface.portfast == ConfigState.ENABLED else None,
+                interface.bpdu_guard_evidence
+                if interface.bpdu_guard == ConfigState.DISABLED else None,
+            ) if line is not None)
 
         return sorted(
             set(evidence),

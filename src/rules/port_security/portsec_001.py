@@ -115,15 +115,12 @@ class PORTSEC001InconsistentCoverageRule:
         evidence: list[SourceLine] = []
 
         for interface in [*protected_peers, *affected_interfaces]:
-            evidence.extend(
-                line
-                for line in interface.raw_lines
-                if line.text.strip().startswith("interface ")
-                or line.text.strip() == "switchport mode access"
-                or line.text.strip().startswith("switchport access vlan ")
-                or line.text.strip() == "switchport port-security"
-                or line.text.strip() == "no switchport port-security"
-            )
+            evidence.extend(line for line in (
+                interface.declaration_evidence,
+                interface.mode_evidence,
+                interface.access_vlan_evidence,
+                interface.port_security_evidence,
+            ) if line is not None)
 
         evidence.sort(key=lambda line: line.line_number)
         return evidence

@@ -2,6 +2,7 @@ from src.domain.models import (
     Confidence,
     ConfigState,
     Finding,
+    InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
     RuleEvaluation,
@@ -50,9 +51,7 @@ class DHCP003TrustedAccessPortRule:
             if vlan_evidence is not None:
                 evidence.append(vlan_evidence)
 
-            evidence.extend(
-                self._collect_evidence(interface.raw_lines)
-            )
+            evidence.extend(self._collect_evidence(interface))
 
             finding = Finding(
                 rule_id=self.rule_id,
@@ -86,17 +85,15 @@ class DHCP003TrustedAccessPortRule:
 
     @staticmethod
     def _collect_evidence(
-        raw_lines: list[SourceLine],
+        interface: InterfaceConfig,
     ) -> list[SourceLine]:
-        relevant_commands = (
-            "interface ",
-            "switchport mode access",
-            "switchport access vlan ",
-            "ip dhcp snooping trust",
-        )
-
         return [
             line
-            for line in raw_lines
-            if line.text.strip().startswith(relevant_commands)
+            for line in (
+                interface.declaration_evidence,
+                interface.mode_evidence,
+                interface.access_vlan_evidence,
+                interface.dhcp_snooping_trust_evidence,
+            )
+            if line is not None
         ]

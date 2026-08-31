@@ -17,6 +17,14 @@ def test_interface_defaults_to_not_configured_dhcp_trust():
     assert interface.portfast == ConfigState.NOT_CONFIGURED
     assert interface.bpdu_guard == ConfigState.NOT_CONFIGURED
     assert interface.ip_source_guard == ConfigState.NOT_CONFIGURED
+    assert interface.declaration_evidence is None
+    assert interface.mode_evidence is None
+    assert interface.access_vlan_evidence is None
+    assert interface.dhcp_snooping_trust_evidence is None
+    assert interface.port_security_evidence is None
+    assert interface.portfast_evidence is None
+    assert interface.bpdu_guard_evidence is None
+    assert interface.ip_source_guard_evidence is None
 
 
 def test_parsed_config_can_store_dhcp_information():

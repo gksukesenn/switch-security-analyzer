@@ -98,18 +98,12 @@ class DHCP002AccessVlanNotCoveredRule:
 
         evidence.extend(config.dhcp_snooping_vlan_evidence.values())
 
-        relevant_commands = (
-            "interface ",
-            "switchport mode access",
-            "switchport access vlan ",
-        )
-
         for interface in interfaces:
-            evidence.extend(
-                line
-                for line in interface.raw_lines
-                if line.text.strip().startswith(relevant_commands)
-            )
+            evidence.extend(line for line in (
+                interface.declaration_evidence,
+                interface.mode_evidence,
+                interface.access_vlan_evidence,
+            ) if line is not None)
 
         evidence.sort(key=lambda line: line.line_number)
         return evidence

@@ -74,12 +74,10 @@ class MGMT001VtyTelnetEnabledRule:
         evidence: list[SourceLine] = []
 
         for vty in affected_vty_lines:
-            evidence.extend(
-                line
-                for line in vty.raw_lines
-                if line.text.strip().startswith("line vty ")
-                or line is vty.transport_input_evidence
-            )
+            evidence.extend(line for line in (
+                vty.declaration_evidence,
+                vty.transport_input_evidence,
+            ) if line is not None)
 
         evidence.sort(key=lambda line: line.line_number)
         return evidence
