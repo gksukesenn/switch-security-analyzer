@@ -29,6 +29,20 @@ class Confidence(str, Enum):
     HIGH = "high"
 
 
+class CoverageClass(str, Enum):
+    SUPPORTED_RELEVANT = "supported_relevant"
+    UNSUPPORTED_RELEVANT = "unsupported_relevant"
+    OUT_OF_SCOPE = "out_of_scope"
+    UNKNOWN_RELEVANCE = "unknown_relevance"
+
+
+class AnalysisConfidence(str, Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+    UNKNOWN = "unknown"
+
+
 @dataclass(frozen=True)
 class SourceLine:
     line_number: int
@@ -100,6 +114,9 @@ class ParsedConfig:
     vty_lines: list[VtyConfig] = field(default_factory=list)
 
     unparsed_lines: list[SourceLine] = field(default_factory=list)
+    parsed_line_coverage: dict[int, CoverageClass] = field(
+        default_factory=dict
+    )
 
 
 @dataclass

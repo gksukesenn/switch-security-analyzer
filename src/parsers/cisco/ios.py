@@ -1,5 +1,6 @@
 from src.domain.models import (
     ConfigState,
+    CoverageClass,
     InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
@@ -43,12 +44,17 @@ class CiscoIOSParser:
                     current_interface.description = stripped.removeprefix(
                         "description "
                     ).strip()
+                    self._record_coverage(
+                        config, source_line, CoverageClass.OUT_OF_SCOPE
+                    )
 
                 elif stripped == "switchport mode access":
                     current_interface.mode = InterfaceMode.ACCESS
+                    self._record_supported(config, source_line)
 
                 elif stripped == "switchport mode trunk":
                     current_interface.mode = InterfaceMode.TRUNK
+                    self._record_supported(config, source_line)
 
                 elif stripped.startswith("switchport access vlan "):
                     vlan_text = stripped.removeprefix(
@@ -57,6 +63,7 @@ class CiscoIOSParser:
 
                     try:
                         current_interface.access_vlan = int(vlan_text)
+                        self._record_supported(config, source_line)
                     except ValueError:
                         config.unparsed_lines.append(source_line)
 
@@ -64,40 +71,50 @@ class CiscoIOSParser:
                     current_interface.dhcp_snooping_trust = (
                         ConfigState.ENABLED
                     )
+                    self._record_supported(config, source_line)
 
                 elif stripped == "no ip dhcp snooping trust":
                     current_interface.dhcp_snooping_trust = (
                         ConfigState.DISABLED
                     )
+                    self._record_supported(config, source_line)
 
                 elif stripped == "switchport port-security":
                     current_interface.port_security = ConfigState.ENABLED
+                    self._record_supported(config, source_line)
 
                 elif stripped == "no switchport port-security":
                     current_interface.port_security = ConfigState.DISABLED
+                    self._record_supported(config, source_line)
 
                 elif stripped in (
                     "spanning-tree portfast",
                     "spanning-tree portfast edge",
                 ):
                     current_interface.portfast = ConfigState.ENABLED
+                    self._record_supported(config, source_line)
 
                 elif stripped == "spanning-tree bpduguard enable":
                     current_interface.bpdu_guard = ConfigState.ENABLED
+                    self._record_supported(config, source_line)
 
                 elif stripped == "spanning-tree bpduguard disable":
                     current_interface.bpdu_guard = ConfigState.DISABLED
+                    self._record_supported(config, source_line)
 
                 elif stripped == "no spanning-tree bpduguard":
                     current_interface.bpdu_guard = (
                         ConfigState.NOT_CONFIGURED
                     )
+                    self._record_supported(config, source_line)
 
                 elif stripped == "ip verify source":
                     current_interface.ip_source_guard = ConfigState.ENABLED
+                    self._record_supported(config, source_line)
 
                 elif stripped == "no ip verify source":
                     current_interface.ip_source_guard = ConfigState.DISABLED
+                    self._record_supported(config, source_line)
 
                 else:
                     config.unparsed_lines.append(source_line)
@@ -134,6 +151,7 @@ class CiscoIOSParser:
                 )
 
                 config.interfaces.append(current_interface)
+                self._record_supported(config, source_line)
 
             elif stripped.startswith("line vty "):
                 range_tokens = stripped.split()
@@ -155,35 +173,45 @@ class CiscoIOSParser:
                     raw_lines=[source_line],
                 )
                 config.vty_lines.append(current_vty)
+                self._record_supported(config, source_line)
 
             elif stripped.startswith("hostname "):
                 config.hostname = stripped.removeprefix(
                     "hostname "
                 ).strip()
+                self._record_coverage(
+                    config, source_line, CoverageClass.OUT_OF_SCOPE
+                )
 
             elif stripped == "ip dhcp snooping":
                 config.dhcp_snooping_global = ConfigState.ENABLED
                 config.dhcp_snooping_global_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped == "no ip dhcp snooping":
                 config.dhcp_snooping_global = ConfigState.DISABLED
                 config.dhcp_snooping_global_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped == "ip http server":
                 config.http_server = ConfigState.ENABLED
                 config.http_server_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped == "no ip http server":
                 config.http_server = ConfigState.DISABLED
                 config.http_server_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped == "ip http secure-server":
                 config.https_server = ConfigState.ENABLED
                 config.https_server_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped == "no ip http secure-server":
                 config.https_server = ConfigState.DISABLED
                 config.https_server_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped.startswith("ip dhcp snooping vlan "):
                 vlan_text = stripped.removeprefix(
@@ -195,6 +223,7 @@ class CiscoIOSParser:
                     
                     config.dhcp_snooping_vlans.add(vlan_id)
                     config.dhcp_snooping_vlan_evidence[vlan_id] = source_line
+                    self._record_supported(config, source_line)
                 except ValueError:
                     config.unparsed_lines.append(source_line)
 
@@ -208,6 +237,7 @@ class CiscoIOSParser:
 
                     config.dai_vlans.add(vlan_id)
                     config.dai_vlan_evidence[vlan_id] = source_line
+                    self._record_supported(config, source_line)
                 except ValueError:
                     config.unparsed_lines.append(source_line)
 
@@ -217,6 +247,7 @@ class CiscoIOSParser:
             ):
                 config.portfast_default = ConfigState.ENABLED
                 config.portfast_default_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped in (
                 "no spanning-tree portfast default",
@@ -224,6 +255,7 @@ class CiscoIOSParser:
             ):
                 config.portfast_default = ConfigState.DISABLED
                 config.portfast_default_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped in (
                 "spanning-tree portfast bpduguard default",
@@ -231,6 +263,7 @@ class CiscoIOSParser:
             ):
                 config.bpdu_guard_default = ConfigState.ENABLED
                 config.bpdu_guard_default_evidence = source_line
+                self._record_supported(config, source_line)
 
             elif stripped in (
                 "no spanning-tree portfast bpduguard default",
@@ -238,6 +271,7 @@ class CiscoIOSParser:
             ):
                 config.bpdu_guard_default = ConfigState.DISABLED
                 config.bpdu_guard_default_evidence = source_line
+                self._record_supported(config, source_line)
 
             else:
                 config.unparsed_lines.append(source_line)
@@ -281,3 +315,28 @@ class CiscoIOSParser:
             return
 
         vty.transport_input_evidence = source_line
+        CiscoIOSParser._record_supported(config, source_line)
+
+    @staticmethod
+    def _record_supported(
+        config: ParsedConfig,
+        source_line: SourceLine,
+    ) -> None:
+        CiscoIOSParser._record_coverage(
+            config,
+            source_line,
+            CoverageClass.SUPPORTED_RELEVANT,
+        )
+
+    @staticmethod
+    def _record_coverage(
+        config: ParsedConfig,
+        source_line: SourceLine,
+        classification: CoverageClass,
+    ) -> None:
+        if source_line.line_number in config.parsed_line_coverage:
+            raise ValueError(
+                f"duplicate coverage classification for line "
+                f"{source_line.line_number}"
+            )
+        config.parsed_line_coverage[source_line.line_number] = classification

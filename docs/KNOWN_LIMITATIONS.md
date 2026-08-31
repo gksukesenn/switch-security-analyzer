@@ -1,5 +1,14 @@
 # Known Limitations
 
+## Parser Coverage V1
+
+Parser Coverage V1 is line-oriented and is not vendor-version/default aware.
+Its small executable registry, rather than this prose document, is the source
+of truth for declared unsupported Cisco command families. Multi-line banner
+blocks are not modeled. See [Parser Coverage V1](PARSER_COVERAGE.md) for the
+classification model, formulas, dedicated fixtures, and provisional Analysis
+Confidence thresholds.
+
 ## PORTSEC-001 — Peer consistency heuristic
 
 PORTSEC-001 uses at least one Port Security-enabled interface within the
