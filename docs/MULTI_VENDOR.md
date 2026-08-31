@@ -1,5 +1,13 @@
 # Multi-vendor direction
 
+- Vendor selection is explicit. An omitted vendor defaults to `cisco_ios` only
+  for backward compatibility; configuration syntax is not auto-detected.
+- The parser, safe-configuration renderer, and coverage registry are selected
+  together at application composition time.
+- `aruba_aos_cx` is a reserved, recognized identifier, but remains unsupported
+  until all three Aruba components exist. Unsupported vendors fail explicitly
+  and never fall back to Cisco components.
+
 - Detection logic remains on the normalized model.
 - Each vendor parser produces normalized field evidence as `SourceLine`
   provenance alongside the normalized value.

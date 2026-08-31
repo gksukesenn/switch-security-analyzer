@@ -1,13 +1,6 @@
-from dataclasses import dataclass
 import re
-from typing import Pattern
 
-
-@dataclass(frozen=True)
-class UnsupportedCommandFamily:
-    family_id: str
-    pattern: Pattern[str]
-    rationale: str
+from src.coverage.registry import UnsupportedCommandFamily
 
 
 def _family(
@@ -142,3 +135,15 @@ def match_unsupported_family(command: str) -> UnsupportedCommandFamily | None:
 
 def is_out_of_scope(command: str) -> bool:
     return any(pattern.fullmatch(command) for pattern in OUT_OF_SCOPE_PATTERNS)
+
+
+class CiscoCoverageRegistry:
+    @staticmethod
+    def match_unsupported_family(
+        command: str,
+    ) -> UnsupportedCommandFamily | None:
+        return match_unsupported_family(command)
+
+    @staticmethod
+    def is_out_of_scope(command: str) -> bool:
+        return is_out_of_scope(command)

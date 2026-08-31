@@ -1,8 +1,8 @@
 from collections import Counter
 
-from src.coverage.cisco_registry import (
-    is_out_of_scope,
-    match_unsupported_family,
+from src.coverage.registry import (
+    CoverageRegistry,
+    default_coverage_registry,
 )
 from src.domain.coverage import CoverageLine, CoverageReport
 from src.domain.models import (
@@ -12,6 +12,7 @@ from src.domain.models import (
     SourceLine,
 )
 from src.parsers.cisco.ios import CiscoIOSParser
+from src.services.vendor_selection import ConfigParser
 
 
 class CoverageCalculator:
@@ -69,8 +70,15 @@ class CoverageCalculator:
 
 
 class CoverageService:
-    def __init__(self) -> None:
-        self.parser = CiscoIOSParser()
+    def __init__(
+        self,
+        parser: ConfigParser | None = None,
+        registry: CoverageRegistry | None = None,
+    ) -> None:
+        self.parser = parser if parser is not None else CiscoIOSParser()
+        self.registry = (
+            registry if registry is not None else default_coverage_registry()
+        )
 
     def evaluate(
         self,
@@ -119,8 +127,8 @@ class CoverageService:
             analysis_confidence=confidence,
         )
 
-    @staticmethod
     def _classify_line(
+        self,
         line: SourceLine,
         config: ParsedConfig,
     ) -> CoverageLine:
@@ -129,13 +137,13 @@ class CoverageService:
             return CoverageLine(line, parsed_class)
 
         command = line.text.strip()
-        family = match_unsupported_family(command)
+        family = self.registry.match_unsupported_family(command)
         if family is not None:
             return CoverageLine(
                 line,
                 CoverageClass.UNSUPPORTED_RELEVANT,
                 family.family_id,
             )
-        if is_out_of_scope(command):
+        if self.registry.is_out_of_scope(command):
             return CoverageLine(line, CoverageClass.OUT_OF_SCOPE)
         return CoverageLine(line, CoverageClass.UNKNOWN_RELEVANCE)

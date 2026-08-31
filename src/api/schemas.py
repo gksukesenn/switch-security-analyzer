@@ -1,10 +1,15 @@
-from pydantic import BaseModel, ConfigDict, field_validator
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from src.domain.vendors import Vendor
 
 
 class AnalyzeRequest(BaseModel):
     model_config = ConfigDict(strict=True)
 
     config: str
+    vendor: Annotated[Vendor, Field(strict=False)] = Vendor.CISCO_IOS
 
     @field_validator("config")
     @classmethod

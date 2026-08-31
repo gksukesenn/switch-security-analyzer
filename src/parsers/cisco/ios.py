@@ -7,11 +7,12 @@ from src.domain.models import (
     SourceLine,
     VtyConfig,
 )
+from src.domain.vendors import Vendor
 
 
 class CiscoIOSParser:
     def parse(self, raw_text: str) -> ParsedConfig:
-        config = ParsedConfig(vendor="cisco_ios")
+        config = ParsedConfig(vendor=Vendor.CISCO_IOS.value)
 
         current_interface: InterfaceConfig | None = None
         current_vty: VtyConfig | None = None

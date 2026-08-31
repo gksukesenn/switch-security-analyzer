@@ -67,6 +67,46 @@ async def test_analyze_serializes_insecure_http_finding():
     ]
 
 
+async def test_explicit_cisco_vendor_matches_omitted_vendor_response():
+    config = "hostname ACCESS-SW-01\nip http server\n"
+
+    omitted = await api_request(
+        "POST", "/analyze", json={"config": config}
+    )
+    explicit = await api_request(
+        "POST",
+        "/analyze",
+        json={"vendor": "cisco_ios", "config": config},
+    )
+
+    assert omitted.status_code == 200
+    assert explicit.status_code == 200
+    assert explicit.json() == omitted.json()
+
+
+async def test_unknown_vendor_is_rejected():
+    response = await api_request(
+        "POST",
+        "/analyze",
+        json={"vendor": "unknown_vendor", "config": "hostname SW1"},
+    )
+
+    assert response.status_code == 422
+
+
+async def test_reserved_aruba_vendor_is_unsupported_without_cisco_fallback():
+    response = await api_request(
+        "POST",
+        "/analyze",
+        json={"vendor": "aruba_aos_cx", "config": "ip http server"},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "vendor is not supported: aruba_aos_cx"
+    }
+
+
 async def test_analyze_serializes_fully_assessed_numeric_posture():
     raw_text = """ip dhcp snooping
 ip dhcp snooping vlan 10

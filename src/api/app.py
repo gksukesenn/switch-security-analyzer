@@ -15,6 +15,7 @@ from src.api.schemas import (
     RulePenaltyResponse,
 )
 from src.services.analysis import AnalysisApplicationService
+from src.domain.vendors import UnsupportedVendorError
 
 
 MAX_CONFIG_BYTES = 1024 * 1024
@@ -54,7 +55,13 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             detail=f"config exceeds the {MAX_CONFIG_BYTES}-byte limit",
         )
 
-    result = analysis_service.analyze(request.config)
+    try:
+        result = analysis_service.analyze(request.config, request.vendor)
+    except UnsupportedVendorError as exception:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exception),
+        ) from exception
     posture = result.posture
 
     return AnalyzeResponse(

@@ -17,14 +17,16 @@ from src.rules.port_security.portsec_001 import (
     PORTSEC001InconsistentCoverageRule,
 )
 from src.rules.stp.stp_001 import STP001PortFastWithoutBPDUGuardRule
+from src.services.vendor_selection import ConfigParser
 
 
 class AnalyzerService:
     def __init__(
         self,
         safe_config_renderer: SafeConfigRenderer | None = None,
+        parser: ConfigParser | None = None,
     ) -> None:
-        self.parser = CiscoIOSParser()
+        self.parser = parser if parser is not None else CiscoIOSParser()
         renderer = (
             safe_config_renderer
             if safe_config_renderer is not None

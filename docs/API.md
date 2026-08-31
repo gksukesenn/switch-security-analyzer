@@ -32,19 +32,22 @@ Request body:
 
 ```json
 {
+  "vendor": "cisco_ios",
   "config": "hostname ACCESS-SW-01\nip http server\n"
 }
 ```
 
 `config` is required, must be a string, and must not be empty or contain only
 whitespace. Its UTF-8 representation is limited to 1 MiB (1,048,576 bytes).
+`vendor` is optional and defaults to `cisco_ios` for backward compatibility.
+Vendor auto-detection is not performed.
 
 Example:
 
 ```bash
 curl --request POST http://127.0.0.1:8000/analyze \
   --header 'content-type: application/json' \
-  --data '{"config":"hostname ACCESS-SW-01\nip http server\n"}'
+  --data '{"vendor":"cisco_ios","config":"hostname ACCESS-SW-01\nip http server\n"}'
 ```
 
 The response has four sections:
@@ -111,17 +114,22 @@ relevant syntax is present.
 ## Validation and errors
 
 - Missing fields, wrong types, blank config, and malformed JSON return `422`.
+- Unknown vendors return `422`. The reserved `aruba_aos_cx` identifier also
+  returns `422` until its parser, renderer, and coverage registry are
+  implemented; it never falls back to Cisco processing.
 - Config input larger than 1 MiB returns `413`.
 - Unexpected internal failures return `500` with a generic response and no
   Python traceback or internal exception detail.
 
 ## V1 scope and limitations
 
-The current reference implementation analyzes Cisco IOS/IOS-XE syntax. V1
+The current reference implementation analyzes Cisco IOS/IOS-XE syntax. Parser,
+safe-config renderer, and coverage registry are selected together from the
+explicit vendor identifier. V1
 does not provide authentication, production hardening, rate limiting, TLS
 termination, persistent storage, background processing, file upload, batch
-analysis, or a frontend. Vendor auto-detection is not provided; the existing
-Cisco parser is used directly.
+analysis, or a frontend. Vendor auto-detection and cross-vendor fallback are
+not provided.
 
 Deployments must add authentication, transport security, request controls,
 and other operational protections outside this V1 application before any
