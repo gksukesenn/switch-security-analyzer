@@ -8,10 +8,19 @@ from src.domain.models import (
     SourceLine,
     VtyConfig,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 
 
 class MGMT001VtyTelnetEnabledRule:
     rule_id = "MGMT-001"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -59,8 +68,8 @@ class MGMT001VtyTelnetEnabledRule:
                     "to SSH and apply the appropriate authentication and "
                     "management-source restrictions for the environment."
                 ),
-                safe_config_example=self._build_safe_config_example(
-                    affected_vty_lines
+                safe_config_example=self.renderer.restrict_vty_to_ssh(
+                    (vty.start, vty.end) for vty in affected_vty_lines
                 ),
                 evidence=self._collect_evidence(affected_vty_lines),
             )],
@@ -81,15 +90,3 @@ class MGMT001VtyTelnetEnabledRule:
 
         evidence.sort(key=lambda line: line.line_number)
         return evidence
-
-    @staticmethod
-    def _build_safe_config_example(
-        affected_vty_lines: list[VtyConfig],
-    ) -> str:
-        return "\n!\n".join(
-            (
-                f"line vty {vty.start} {vty.end}\n"
-                " transport input ssh"
-            )
-            for vty in affected_vty_lines
-        )

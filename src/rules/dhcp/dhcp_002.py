@@ -9,11 +9,20 @@ from src.domain.models import (
     Severity,
     SourceLine,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 from src.utils import natural_sort_key
 
 
 class DHCP002AccessVlanNotCoveredRule:
     rule_id = "DHCP-002"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -74,8 +83,7 @@ class DHCP002AccessVlanNotCoveredRule:
                         "DHCP server paths are trusted."
                     ),
                     safe_config_example=(
-                        "ip dhcp snooping\n"
-                        f"ip dhcp snooping vlan {vlan_id}"
+                        self.renderer.add_dhcp_snooping_vlan(vlan_id)
                     ),
                     evidence=evidence,
                     affected_interfaces=[

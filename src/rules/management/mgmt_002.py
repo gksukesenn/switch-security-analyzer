@@ -6,10 +6,19 @@ from src.domain.models import (
     RuleEvaluation,
     Severity,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 
 
 class MGMT002InsecureHTTPServerRule:
     rule_id = "MGMT-002"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -52,7 +61,9 @@ class MGMT002InsecureHTTPServerRule:
                     "management-access restrictions required by the "
                     "environment."
                 ),
-                safe_config_example="no ip http server",
+                safe_config_example=(
+                    self.renderer.disable_insecure_http_server()
+                ),
                 evidence=evidence,
             )],
             assessed_units=assessed_units,

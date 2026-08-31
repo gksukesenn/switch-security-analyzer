@@ -1,5 +1,9 @@
 from src.domain.models import Finding
 from src.parsers.cisco.ios import CiscoIOSParser
+from src.renderers.safe_config import (
+    CiscoSafeConfigRenderer,
+    SafeConfigRenderer,
+)
 from src.rules.dai.dai_001 import DAI001DhcpVlanWithoutDAIRule
 from src.rules.dhcp.dhcp_001 import DHCP001GloballyInactiveRule
 from src.rules.dhcp.dhcp_002 import DHCP002AccessVlanNotCoveredRule
@@ -16,19 +20,27 @@ from src.rules.stp.stp_001 import STP001PortFastWithoutBPDUGuardRule
 
 
 class AnalyzerService:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        safe_config_renderer: SafeConfigRenderer | None = None,
+    ) -> None:
         self.parser = CiscoIOSParser()
+        renderer = (
+            safe_config_renderer
+            if safe_config_renderer is not None
+            else CiscoSafeConfigRenderer()
+        )
 
         self.rules = [
-            DHCP001GloballyInactiveRule(),
-            DHCP002AccessVlanNotCoveredRule(),
-            DHCP003TrustedAccessPortRule(),
-            PORTSEC001InconsistentCoverageRule(),
-            STP001PortFastWithoutBPDUGuardRule(),
-            DAI001DhcpVlanWithoutDAIRule(),
-            IPSG001DhcpEndpointWithoutIPSGRule(),
-            MGMT001VtyTelnetEnabledRule(),
-            MGMT002InsecureHTTPServerRule(),
+            DHCP001GloballyInactiveRule(renderer),
+            DHCP002AccessVlanNotCoveredRule(renderer),
+            DHCP003TrustedAccessPortRule(renderer),
+            PORTSEC001InconsistentCoverageRule(renderer),
+            STP001PortFastWithoutBPDUGuardRule(renderer),
+            DAI001DhcpVlanWithoutDAIRule(renderer),
+            IPSG001DhcpEndpointWithoutIPSGRule(renderer),
+            MGMT001VtyTelnetEnabledRule(renderer),
+            MGMT002InsecureHTTPServerRule(renderer),
         ]
 
     def analyze(self, raw_text: str) -> list[Finding]:

@@ -33,6 +33,17 @@ The rule uses `MEDIUM` confidence because of these limitations. Its heuristic
 may be recalibrated when representative configuration corpora and additional
 access-control context become available.
 
+## DHCP-003 — Legacy safe configuration example
+
+DHCP-003 remediation correctly says to remove DHCP Snooping trust from an
+endpoint interface. Its current Cisco `safe_config_example`, however, repeats
+only the interface access mode and VLAN context and does not include
+`no ip dhcp snooping trust`.
+
+This mismatch is deliberately preserved for exact output parity during the
+vendor-renderer refactor. Correcting the example is a separate, intentional
+behavior-change checkpoint.
+
 ## STP-001 — Initial effective-state scope
 
 STP-001 evaluates PortFast edge intent only on interfaces explicitly parsed as

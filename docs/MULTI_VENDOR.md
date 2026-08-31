@@ -5,10 +5,14 @@
   provenance alongside the normalized value.
 - Rules must not scan raw vendor command syntax when normalized provenance is
   available.
-- Vendor-specific safe configuration rendering will be addressed in a separate
-  vendor-adapter checkpoint. Safe examples remain Cisco-specific for now.
-- The Aruba parser will not be implemented until the normalized-evidence
-  refactor is complete.
+- Safe-configuration syntax is delegated to a vendor renderer. The Cisco
+  renderer is the current reference implementation and preserves the existing
+  output exactly.
+- If a renderer is unavailable, safe configuration is `N/A`; Cisco syntax is
+  never used as a cross-vendor fallback.
+- An Aruba renderer is planned for the next vendor checkpoint. New vendor
+  orchestration must explicitly select a parser and renderer without adding
+  vendor branches to rules.
 
 The first Aruba vertical slice may produce `score=N/A` because the current
 nine-rule denominator may not satisfy the assessment gate. This is expected at

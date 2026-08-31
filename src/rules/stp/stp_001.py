@@ -9,11 +9,20 @@ from src.domain.models import (
     Severity,
     SourceLine,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 from src.utils import natural_sort_key
 
 
 class STP001PortFastWithoutBPDUGuardRule:
     rule_id = "STP-001"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -70,8 +79,8 @@ class STP001PortFastWithoutBPDUGuardRule:
                     "PortFast BPDU Guard default policy. Do not use "
                     "PortFast edge semantics on switch-to-switch links."
                 ),
-                safe_config_example=self._build_safe_config_example(
-                    affected_interfaces
+                safe_config_example=self.renderer.enable_bpdu_guard(
+                    interface.name for interface in affected_interfaces
                 ),
                 evidence=self._collect_evidence(
                     config,
@@ -155,16 +164,4 @@ class STP001PortFastWithoutBPDUGuardRule:
         return sorted(
             set(evidence),
             key=lambda line: line.line_number,
-        )
-
-    @staticmethod
-    def _build_safe_config_example(
-        affected_interfaces: list[InterfaceConfig],
-    ) -> str:
-        return "\n!\n".join(
-            (
-                f"interface {interface.name}\n"
-                " spanning-tree bpduguard enable"
-            )
-            for interface in affected_interfaces
         )

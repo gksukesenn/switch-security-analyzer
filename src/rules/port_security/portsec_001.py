@@ -9,11 +9,20 @@ from src.domain.models import (
     Severity,
     SourceLine,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 from src.utils import natural_sort_key
 
 
 class PORTSEC001InconsistentCoverageRule:
     rule_id = "PORTSEC-001"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -67,8 +76,8 @@ class PORTSEC001InconsistentCoverageRule:
                 protected_peers,
                 affected_interfaces,
             )
-            safe_config_example = self._build_safe_config_example(
-                affected_interfaces
+            safe_config_example = self.renderer.enable_port_security(
+                interface.name for interface in affected_interfaces
             )
 
             findings.append(
@@ -124,15 +133,3 @@ class PORTSEC001InconsistentCoverageRule:
 
         evidence.sort(key=lambda line: line.line_number)
         return evidence
-
-    @staticmethod
-    def _build_safe_config_example(
-        affected_interfaces: list[InterfaceConfig],
-    ) -> str:
-        return "\n!\n".join(
-            (
-                f"interface {interface.name}\n"
-                " switchport port-security"
-            )
-            for interface in affected_interfaces
-        )

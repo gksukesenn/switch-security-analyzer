@@ -9,11 +9,20 @@ from src.domain.models import (
     Severity,
     SourceLine,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 from src.utils import natural_sort_key
 
 
 class DAI001DhcpVlanWithoutDAIRule:
     rule_id = "DAI-001"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -69,8 +78,8 @@ class DAI001DhcpVlanWithoutDAIRule:
                         "trusted paths and any required handling for "
                         "statically addressed hosts."
                     ),
-                    safe_config_example=(
-                        f"ip arp inspection vlan {vlan_id}"
+                    safe_config_example=self.renderer.enable_dai_vlan(
+                        vlan_id
                     ),
                     evidence=self._collect_evidence(
                         config,

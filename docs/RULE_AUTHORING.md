@@ -9,6 +9,15 @@ the mapping from its syntax to both the normalized field and the corresponding
 
 ## Safe configuration examples
 
+Rules express security detection and remediation semantics, but must delegate
+vendor-specific safe configuration syntax to `SafeConfigRenderer`. Supporting
+a new vendor requires its parser and renderer; do not add vendor branches to
+existing rules.
+
+The default Cisco renderer exists only for current backward compatibility.
+Future multi-vendor orchestration must explicitly select and inject the
+renderer.
+
 `safe_config_example` is a minimal, context-aware remediation snippet. It
 shows the parent configuration context required to apply the fix, such as
 `interface <actual-interface>`, followed by only the commands needed to

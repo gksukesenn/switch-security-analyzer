@@ -7,10 +7,19 @@ from src.domain.models import (
     Severity,
     SourceLine,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 
 
 class DHCP001GloballyInactiveRule:
     rule_id = "DHCP-001"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -53,20 +62,9 @@ class DHCP001GloballyInactiveRule:
 
         evidence.sort(key=lambda line: line.line_number)
 
-        safe_vlan_scope = [
-            f"ip dhcp snooping vlan {vlan_id}"
-            for vlan_id in sorted(config.dhcp_snooping_vlans)
-        ]
-
-        if not safe_vlan_scope:
-            safe_vlan_scope.append(
-                "ip dhcp snooping vlan <intended-vlan-id>"
-            )
-
-        safe_config_example = "\n".join([
-            "ip dhcp snooping",
-            *safe_vlan_scope,
-        ])
+        safe_config_example = self.renderer.enable_dhcp_snooping(
+            config.dhcp_snooping_vlans
+        )
 
         return RuleEvaluation(
             findings=[Finding(

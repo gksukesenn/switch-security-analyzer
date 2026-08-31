@@ -9,10 +9,19 @@ from src.domain.models import (
     Severity,
     SourceLine,
 )
+from src.renderers.safe_config import (
+    SafeConfigRenderer,
+    default_safe_config_renderer,
+)
 
 
 class DHCP003TrustedAccessPortRule:
     rule_id = "DHCP-003"
+
+    def __init__(self, renderer: SafeConfigRenderer | None = None) -> None:
+        self.renderer = (
+            renderer if renderer is not None else default_safe_config_renderer()
+        )
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
         return self.evaluate_detailed(config).findings
@@ -71,9 +80,10 @@ class DHCP003TrustedAccessPortRule:
                     "DHCP server paths."
                 ),
                 safe_config_example=(
-                    f"interface {interface.name}\n"
-                    " switchport mode access\n"
-                    f" switchport access vlan {interface.access_vlan}"
+                    self.renderer.correct_trusted_access_interface(
+                        interface.name,
+                        interface.access_vlan,
+                    )
                 ),
                 evidence=evidence,
                 affected_interfaces=[interface.name],
