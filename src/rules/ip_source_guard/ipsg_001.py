@@ -5,6 +5,7 @@ from src.domain.models import (
     InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
     SourceLine,
 )
@@ -15,10 +16,14 @@ class IPSG001DhcpEndpointWithoutIPSGRule:
     rule_id = "IPSG-001"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
         if config.dhcp_snooping_global != ConfigState.ENABLED:
-            return []
+            return RuleEvaluation([], 0)
 
         affected_by_vlan: dict[int, list[InterfaceConfig]] = {}
+        assessed_units = 0
 
         for interface in config.interfaces:
             if interface.mode != InterfaceMode.ACCESS:
@@ -32,6 +37,8 @@ class IPSG001DhcpEndpointWithoutIPSGRule:
 
             if interface.dhcp_snooping_trust == ConfigState.ENABLED:
                 continue
+
+            assessed_units += 1
 
             if interface.ip_source_guard not in (
                 ConfigState.NOT_CONFIGURED,
@@ -93,7 +100,7 @@ class IPSG001DhcpEndpointWithoutIPSGRule:
                 )
             )
 
-        return findings
+        return RuleEvaluation(findings, assessed_units)
 
     @staticmethod
     def _collect_evidence(

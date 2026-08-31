@@ -5,6 +5,7 @@ from src.domain.models import (
     InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
     SourceLine,
 )
@@ -15,10 +16,14 @@ class DHCP002AccessVlanNotCoveredRule:
     rule_id = "DHCP-002"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
         if config.dhcp_snooping_global != ConfigState.ENABLED:
-            return []
+            return RuleEvaluation([], 0)
 
         interfaces_by_vlan: dict[int, list[InterfaceConfig]] = {}
+        assessed_vlans: set[int] = set()
 
         for interface in config.interfaces:
             if interface.mode != InterfaceMode.ACCESS:
@@ -29,6 +34,8 @@ class DHCP002AccessVlanNotCoveredRule:
 
             if interface.dhcp_snooping_trust == ConfigState.ENABLED:
                 continue
+
+            assessed_vlans.add(interface.access_vlan)
 
             if interface.access_vlan in config.dhcp_snooping_vlans:
                 continue
@@ -77,7 +84,7 @@ class DHCP002AccessVlanNotCoveredRule:
                 )
             )
 
-        return findings
+        return RuleEvaluation(findings, len(assessed_vlans))
 
     @staticmethod
     def _collect_evidence(

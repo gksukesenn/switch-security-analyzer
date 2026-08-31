@@ -3,6 +3,7 @@ from src.domain.models import (
     Confidence,
     Finding,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
 )
 
@@ -11,16 +12,26 @@ class MGMT002InsecureHTTPServerRule:
     rule_id = "MGMT-002"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
+        assessed_units = int(
+            config.http_server_evidence is not None
+            and config.http_server in (
+                ConfigState.ENABLED,
+                ConfigState.DISABLED,
+            )
+        )
         if config.http_server != ConfigState.ENABLED:
-            return []
+            return RuleEvaluation([], assessed_units)
 
         evidence = []
         if config.http_server_evidence is not None:
             evidence.append(config.http_server_evidence)
         evidence.sort(key=lambda line: line.line_number)
 
-        return [
-            Finding(
+        return RuleEvaluation(
+            findings=[Finding(
                 rule_id=self.rule_id,
                 title="Insecure HTTP management service explicitly enabled",
                 category="MGMT",
@@ -43,5 +54,6 @@ class MGMT002InsecureHTTPServerRule:
                 ),
                 safe_config_example="no ip http server",
                 evidence=evidence,
-            )
-        ]
+            )],
+            assessed_units=assessed_units,
+        )

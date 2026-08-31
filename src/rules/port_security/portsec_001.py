@@ -5,6 +5,7 @@ from src.domain.models import (
     InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
     SourceLine,
 )
@@ -15,6 +16,9 @@ class PORTSEC001InconsistentCoverageRule:
     rule_id = "PORTSEC-001"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
         peers_by_vlan: dict[int, list[InterfaceConfig]] = {}
 
         for interface in config.interfaces:
@@ -30,6 +34,7 @@ class PORTSEC001InconsistentCoverageRule:
             ).append(interface)
 
         findings: list[Finding] = []
+        assessed_units = 0
 
         for vlan_id in sorted(peers_by_vlan):
             peers = peers_by_vlan[vlan_id]
@@ -38,6 +43,9 @@ class PORTSEC001InconsistentCoverageRule:
                 for interface in peers
                 if interface.port_security == ConfigState.ENABLED
             ]
+
+            if protected_peers:
+                assessed_units += len(peers)
             affected_interfaces = [
                 interface
                 for interface in peers
@@ -97,7 +105,7 @@ class PORTSEC001InconsistentCoverageRule:
                 )
             )
 
-        return findings
+        return RuleEvaluation(findings, assessed_units)
 
     @staticmethod
     def _collect_evidence(

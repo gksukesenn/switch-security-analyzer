@@ -5,6 +5,7 @@ from src.domain.models import (
     InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
     SourceLine,
 )
@@ -15,7 +16,11 @@ class STP001PortFastWithoutBPDUGuardRule:
     rule_id = "STP-001"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
         affected_interfaces: list[InterfaceConfig] = []
+        assessed_units = 0
 
         for interface in config.interfaces:
             if interface.mode != InterfaceMode.ACCESS:
@@ -29,18 +34,23 @@ class STP001PortFastWithoutBPDUGuardRule:
                 interface,
             )
 
+            if effective_bpdu_guard is None:
+                continue
+
+            assessed_units += 1
+
             if effective_bpdu_guard is False:
                 affected_interfaces.append(interface)
 
         if not affected_interfaces:
-            return []
+            return RuleEvaluation([], assessed_units)
 
         affected_interfaces.sort(
             key=lambda interface: natural_sort_key(interface.name)
         )
 
-        return [
-            Finding(
+        return RuleEvaluation(
+            findings=[Finding(
                 rule_id=self.rule_id,
                 title="PortFast edge port lacks effective BPDU Guard",
                 category="STP",
@@ -70,8 +80,9 @@ class STP001PortFastWithoutBPDUGuardRule:
                 affected_interfaces=[
                     interface.name for interface in affected_interfaces
                 ],
-            )
-        ]
+            )],
+            assessed_units=assessed_units,
+        )
 
     @staticmethod
     def _has_effective_portfast(

@@ -3,6 +3,7 @@ from src.domain.models import (
     ConfigState,
     Finding,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
     SourceLine,
 )
@@ -12,8 +13,9 @@ class DHCP001GloballyInactiveRule:
     rule_id = "DHCP-001"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
-        if config.dhcp_snooping_global == ConfigState.ENABLED:
-            return []
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
 
         trusted_interfaces = [
             interface
@@ -21,8 +23,16 @@ class DHCP001GloballyInactiveRule:
             if interface.dhcp_snooping_trust == ConfigState.ENABLED
         ]
 
-        if not config.dhcp_snooping_vlans and not trusted_interfaces:
-            return []
+        assessed_units = int(
+            config.dhcp_snooping_global == ConfigState.ENABLED
+            or bool(config.dhcp_snooping_vlans or trusted_interfaces)
+        )
+
+        if config.dhcp_snooping_global == ConfigState.ENABLED:
+            return RuleEvaluation([], assessed_units)
+
+        if assessed_units == 0:
+            return RuleEvaluation([], 0)
 
         evidence: list[SourceLine] = []
 
@@ -60,8 +70,8 @@ class DHCP001GloballyInactiveRule:
             *safe_vlan_scope,
         ])
 
-        return [
-            Finding(
+        return RuleEvaluation(
+            findings=[Finding(
                 rule_id=self.rule_id,
                 title="DHCP Snooping globally inactive",
                 category="DHCP_SPOOFING",
@@ -80,5 +90,6 @@ class DHCP001GloballyInactiveRule:
                 ),
                 safe_config_example=safe_config_example,
                 evidence=evidence,
-            )
-        ]
+            )],
+            assessed_units=assessed_units,
+        )

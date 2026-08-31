@@ -134,3 +134,9 @@ class Finding:
 
     evidence: list[SourceLine] = field(default_factory=list)
     affected_interfaces: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class RuleEvaluation:
+    findings: list[Finding]
+    assessed_units: int

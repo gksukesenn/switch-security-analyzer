@@ -4,6 +4,7 @@ from src.domain.models import (
     Finding,
     InterfaceMode,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
     SourceLine,
 )
@@ -13,10 +14,14 @@ class DHCP003TrustedAccessPortRule:
     rule_id = "DHCP-003"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
         findings: list[Finding] = []
+        assessed_units = 0
 
         if config.dhcp_snooping_global != ConfigState.ENABLED:
-            return findings
+            return RuleEvaluation(findings, assessed_units)
 
         for interface in config.interfaces:
             if interface.mode != InterfaceMode.ACCESS:
@@ -27,6 +32,8 @@ class DHCP003TrustedAccessPortRule:
 
             if interface.access_vlan not in config.dhcp_snooping_vlans:
                 continue
+
+            assessed_units += 1
 
             if interface.dhcp_snooping_trust != ConfigState.ENABLED:
                 continue
@@ -75,7 +82,7 @@ class DHCP003TrustedAccessPortRule:
 
             findings.append(finding)
 
-        return findings
+        return RuleEvaluation(findings, assessed_units)
 
     @staticmethod
     def _collect_evidence(

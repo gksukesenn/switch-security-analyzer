@@ -5,6 +5,7 @@ from src.domain.models import (
     InterfaceConfig,
     InterfaceMode,
     ParsedConfig,
+    RuleEvaluation,
     Severity,
     SourceLine,
 )
@@ -15,10 +16,14 @@ class DAI001DhcpVlanWithoutDAIRule:
     rule_id = "DAI-001"
 
     def evaluate(self, config: ParsedConfig) -> list[Finding]:
+        return self.evaluate_detailed(config).findings
+
+    def evaluate_detailed(self, config: ParsedConfig) -> RuleEvaluation:
         if config.dhcp_snooping_global != ConfigState.ENABLED:
-            return []
+            return RuleEvaluation([], 0)
 
         findings: list[Finding] = []
+        assessed_units = 0
 
         for vlan_id in sorted(config.dhcp_snooping_vlans):
             affected_interfaces = sorted(
@@ -33,6 +38,8 @@ class DAI001DhcpVlanWithoutDAIRule:
 
             if not affected_interfaces:
                 continue
+
+            assessed_units += 1
 
             if vlan_id in config.dai_vlans:
                 continue
@@ -77,7 +84,7 @@ class DAI001DhcpVlanWithoutDAIRule:
                 )
             )
 
-        return findings
+        return RuleEvaluation(findings, assessed_units)
 
     @staticmethod
     def _collect_evidence(
