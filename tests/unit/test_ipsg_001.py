@@ -146,9 +146,51 @@ def test_ipsg_001_does_not_treat_unknown_or_unsupported_as_missing():
         ],
     )
 
-    findings = IPSG001DhcpEndpointWithoutIPSGRule().evaluate(config)
+    evaluation = IPSG001DhcpEndpointWithoutIPSGRule().evaluate_detailed(
+        config
+    )
 
-    assert findings == []
+    assert evaluation.findings == []
+    assert evaluation.assessed_units == 0
+
+
+def test_ipsg_001_supported_states_are_assessed_without_changing_findings():
+    config = ParsedConfig(
+        vendor="cisco_ios",
+        dhcp_snooping_global=ConfigState.ENABLED,
+        dhcp_snooping_vlans={20},
+        interfaces=[
+            InterfaceConfig(
+                name="GigabitEthernet1/0/1",
+                mode=InterfaceMode.ACCESS,
+                access_vlan=20,
+                ip_source_guard=ConfigState.ENABLED,
+            ),
+            InterfaceConfig(
+                name="GigabitEthernet1/0/2",
+                mode=InterfaceMode.ACCESS,
+                access_vlan=20,
+                ip_source_guard=ConfigState.NOT_CONFIGURED,
+            ),
+            InterfaceConfig(
+                name="GigabitEthernet1/0/3",
+                mode=InterfaceMode.ACCESS,
+                access_vlan=20,
+                ip_source_guard=ConfigState.DISABLED,
+            ),
+        ],
+    )
+
+    evaluation = IPSG001DhcpEndpointWithoutIPSGRule().evaluate_detailed(
+        config
+    )
+
+    assert evaluation.assessed_units == 3
+    assert len(evaluation.findings) == 1
+    assert evaluation.findings[0].affected_interfaces == [
+        "GigabitEthernet1/0/2",
+        "GigabitEthernet1/0/3",
+    ]
 
 
 def test_ipsg_001_aggregates_and_naturally_sorts_by_vlan():

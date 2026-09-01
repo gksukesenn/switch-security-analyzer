@@ -156,9 +156,12 @@ def test_portsec_001_does_not_treat_unknown_or_unsupported_as_missing():
         ],
     )
 
-    findings = PORTSEC001InconsistentCoverageRule().evaluate(config)
+    evaluation = PORTSEC001InconsistentCoverageRule().evaluate_detailed(
+        config
+    )
 
-    assert findings == []
+    assert evaluation.findings == []
+    assert evaluation.assessed_units == 1
 
 
 def test_portsec_001_aggregates_missing_and_disabled_peers():

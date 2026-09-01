@@ -43,6 +43,12 @@ class DHCP003TrustedAccessPortRule:
             if interface.access_vlan not in config.dhcp_snooping_vlans:
                 continue
 
+            if interface.dhcp_snooping_trust in (
+                ConfigState.UNKNOWN,
+                ConfigState.UNSUPPORTED,
+            ):
+                continue
+
             assessed_units += 1
 
             if interface.dhcp_snooping_trust != ConfigState.ENABLED:

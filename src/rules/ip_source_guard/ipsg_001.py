@@ -47,12 +47,16 @@ class IPSG001DhcpEndpointWithoutIPSGRule:
             if interface.dhcp_snooping_trust == ConfigState.ENABLED:
                 continue
 
-            assessed_units += 1
-
             if interface.ip_source_guard not in (
+                ConfigState.ENABLED,
                 ConfigState.NOT_CONFIGURED,
                 ConfigState.DISABLED,
             ):
+                continue
+
+            assessed_units += 1
+
+            if interface.ip_source_guard == ConfigState.ENABLED:
                 continue
 
             affected_by_vlan.setdefault(

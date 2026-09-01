@@ -50,6 +50,10 @@ RuleEvaluation(
 applicability, intent, and precondition requirements were sufficiently
 satisfied to make a meaningful rule-level assessment.
 
+A resource whose decisive security state is `UNKNOWN` or `UNSUPPORTED` must
+not count as assessed. `NOT_CONFIGURED` is different: when the parser supports
+the control and can establish its absence, the rule may assess that absence.
+
 It must be derived from the rule's existing candidate/precondition logic.
 Do not duplicate the rule logic in a separate assessment service.
 

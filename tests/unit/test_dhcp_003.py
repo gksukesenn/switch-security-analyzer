@@ -1,3 +1,9 @@
+from src.domain.models import (
+    ConfigState,
+    InterfaceConfig,
+    InterfaceMode,
+    ParsedConfig,
+)
 from src.parsers.cisco.ios import CiscoIOSParser
 from src.rules.dhcp.dhcp_003 import DHCP003TrustedAccessPortRule
 
@@ -99,6 +105,33 @@ interface GigabitEthernet1/0/5
     findings = rule.evaluate(config)
 
     assert findings == []
+
+
+def test_dhcp_003_unknown_or_unsupported_trust_is_not_assessed():
+    config = ParsedConfig(
+        vendor="cisco_ios",
+        dhcp_snooping_global=ConfigState.ENABLED,
+        dhcp_snooping_vlans={10},
+        interfaces=[
+            InterfaceConfig(
+                name="GigabitEthernet1/0/1",
+                mode=InterfaceMode.ACCESS,
+                access_vlan=10,
+                dhcp_snooping_trust=ConfigState.UNKNOWN,
+            ),
+            InterfaceConfig(
+                name="GigabitEthernet1/0/2",
+                mode=InterfaceMode.ACCESS,
+                access_vlan=10,
+                dhcp_snooping_trust=ConfigState.UNSUPPORTED,
+            ),
+        ],
+    )
+
+    evaluation = DHCP003TrustedAccessPortRule().evaluate_detailed(config)
+
+    assert evaluation.findings == []
+    assert evaluation.assessed_units == 0
 
 
 def test_dhcp_003_does_not_fire_when_global_snooping_is_disabled():

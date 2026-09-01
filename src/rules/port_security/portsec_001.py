@@ -54,7 +54,13 @@ class PORTSEC001InconsistentCoverageRule:
             ]
 
             if protected_peers:
-                assessed_units += len(peers)
+                assessed_units += sum(
+                    interface.port_security not in (
+                        ConfigState.UNKNOWN,
+                        ConfigState.UNSUPPORTED,
+                    )
+                    for interface in peers
+                )
             affected_interfaces = [
                 interface
                 for interface in peers
