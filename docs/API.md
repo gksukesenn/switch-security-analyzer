@@ -1,6 +1,6 @@
 # REST API V1
 
-The REST API exposes the existing Cisco IOS analysis pipeline. The API layer
+The REST API exposes Cisco IOS and the Aruba AOS-CX first-slice pipelines. The API layer
 orchestrates parsing, registered rule evaluation, parser coverage, Analysis
 Confidence, and posture scoring; it does not implement security or scoring
 logic itself.
@@ -114,16 +114,16 @@ relevant syntax is present.
 ## Validation and errors
 
 - Missing fields, wrong types, blank config, and malformed JSON return `422`.
-- Unknown vendors return `422`. The reserved `aruba_aos_cx` identifier also
-  returns `422` until its parser, renderer, and coverage registry are
-  implemented; it never falls back to Cisco processing.
+- Unknown vendors return `422`. Supported explicit identifiers are `cisco_ios`
+  and `aruba_aos_cx`; neither ever falls back to the other vendor's pipeline.
 - Config input larger than 1 MiB returns `413`.
 - Unexpected internal failures return `500` with a generic response and no
   Python traceback or internal exception detail.
 
 ## V1 scope and limitations
 
-The current reference implementation analyzes Cisco IOS/IOS-XE syntax. Parser,
+The reference implementation analyzes Cisco IOS/IOS-XE syntax and a documented
+Aruba AOS-CX 10.12/10.13 first-slice subset. Parser,
 safe-config renderer, and coverage registry are selected together from the
 explicit vendor identifier. V1
 does not provide authentication, production hardening, rate limiting, TLS

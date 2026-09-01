@@ -94,17 +94,34 @@ async def test_unknown_vendor_is_rejected():
     assert response.status_code == 422
 
 
-async def test_reserved_aruba_vendor_is_unsupported_without_cisco_fallback():
+async def test_aruba_vendor_uses_aruba_pipeline():
     response = await api_request(
         "POST",
         "/analyze",
-        json={"vendor": "aruba_aos_cx", "config": "ip http server"},
+        json={
+            "vendor": "aruba_aos_cx",
+            "config": (
+                "dhcpv4-snooping\n"
+                "vlan 10\n"
+                " dhcpv4-snooping\n"
+                "!\n"
+                "interface 1/1/1\n"
+                " no routing\n"
+                " vlan access 20\n"
+                "!\n"
+            ),
+        },
     )
 
-    assert response.status_code == 422
-    assert response.json() == {
-        "detail": "vendor is not supported: aruba_aos_cx"
-    }
+    assert response.status_code == 200
+    body = response.json()
+    assert body["device"]["vendor"] == "aruba_aos_cx"
+    assert [finding["rule_id"] for finding in body["findings"]] == [
+        "DHCP-002"
+    ]
+    assert body["findings"][0]["safe_config_example"] == (
+        "dhcpv4-snooping\nvlan 20\n dhcpv4-snooping"
+    )
 
 
 async def test_analyze_serializes_fully_assessed_numeric_posture():

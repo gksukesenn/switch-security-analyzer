@@ -1,9 +1,12 @@
-import pytest
-
+from src.coverage.aruba_registry import ArubaCoverageRegistry
 from src.coverage.cisco_registry import CiscoCoverageRegistry
-from src.domain.vendors import UnsupportedVendorError, Vendor
+from src.domain.vendors import Vendor
+from src.parsers.aruba.aos_cx import ArubaAOSCXParser
 from src.parsers.cisco.ios import CiscoIOSParser
-from src.renderers.safe_config import CiscoSafeConfigRenderer
+from src.renderers.safe_config import (
+    ArubaSafeConfigRenderer,
+    CiscoSafeConfigRenderer,
+)
 from src.services.coverage import CoverageService
 from src.services.vendor_selection import VendorComponentSelector
 
@@ -49,20 +52,16 @@ def test_coverage_service_uses_injected_registry():
     assert registry.commands == ["unknown command", "unknown command"]
 
 
-@pytest.mark.parametrize(
-    "selection",
-    [
-        lambda selector: selector.parser_for(Vendor.ARUBA_AOS_CX),
-        lambda selector: selector.renderer_for(Vendor.ARUBA_AOS_CX),
-        lambda selector: selector.coverage_registry_for(
-            Vendor.ARUBA_AOS_CX
-        ),
-        lambda selector: selector.components_for(Vendor.ARUBA_AOS_CX),
-    ],
-)
-def test_unsupported_vendor_never_falls_back_to_cisco(selection):
-    with pytest.raises(
-        UnsupportedVendorError,
-        match="vendor is not supported: aruba_aos_cx",
-    ):
-        selection(VendorComponentSelector())
+def test_aruba_components_are_selected_together_without_cisco_fallback():
+    components = VendorComponentSelector().components_for(
+        Vendor.ARUBA_AOS_CX
+    )
+
+    assert isinstance(components.parser, ArubaAOSCXParser)
+    assert isinstance(components.renderer, ArubaSafeConfigRenderer)
+    assert isinstance(components.coverage_registry, ArubaCoverageRegistry)
+    assert not isinstance(components.parser, CiscoIOSParser)
+    assert not isinstance(components.renderer, CiscoSafeConfigRenderer)
+    assert not isinstance(
+        components.coverage_registry, CiscoCoverageRegistry
+    )

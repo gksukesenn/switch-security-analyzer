@@ -4,9 +4,8 @@
   for backward compatibility; configuration syntax is not auto-detected.
 - The parser, safe-configuration renderer, and coverage registry are selected
   together at application composition time.
-- `aruba_aos_cx` is a reserved, recognized identifier, but remains unsupported
-  until all three Aruba components exist. Unsupported vendors fail explicitly
-  and never fall back to Cisco components.
+- `aruba_aos_cx` selects the Aruba parser, renderer, and coverage registry.
+  Unsupported vendors fail explicitly and never fall back to Cisco components.
 
 - Detection logic remains on the normalized model.
 - Each vendor parser produces normalized field evidence as `SourceLine`
@@ -18,11 +17,13 @@
   output exactly.
 - If a renderer is unavailable, safe configuration is `N/A`; Cisco syntax is
   never used as a cross-vendor fallback.
-- An Aruba renderer is planned for the next vendor checkpoint. New vendor
-  orchestration must explicitly select a parser and renderer without adding
-  vendor branches to rules.
+- The Aruba renderer implements the verified first-slice operations and returns
+  `N/A` for unsupported operations. New vendor orchestration must explicitly
+  select a parser and renderer without adding vendor branches to rules.
 
-The first Aruba vertical slice may produce `score=N/A` because the current
-nine-rule denominator may not satisfy the assessment gate. This is expected at
-that stage and is not a permanent Aruba characteristic. The assessment gate can
-be crossed as more verified Aruba rules are added.
+Aruba scoring uses the unchanged nine-rule denominator and assessment gate. A
+partial configuration may produce `score=N/A`; the fully safe first-slice
+fixture naturally reaches five assessed rules, so its 5/9 assessment ratio
+produces `score=N/A`. This does not imply a worse security result; it reflects
+that four controls are not yet assessed. See `ARUBA_AOS_CX.md` for the current
+scope.
