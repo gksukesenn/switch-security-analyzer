@@ -1,7 +1,18 @@
-# Defensive Lab Validation Plan
+# Defensive Lab Validation Plan and Status
 
-Status: plan only. No PoC traffic has been generated. All future execution is
-restricted to an isolated, synthetic lab with no production or customer data.
+Completed and future execution is restricted to an isolated, synthetic lab
+with no production or customer data.
+
+## Validation status
+
+| Defensive control | Status | Evidence |
+|---|---|---|
+| STP / BPDU Guard | **VALIDATED** | [`STP_BPDU_GUARD_VALIDATION.md`](STP_BPDU_GUARD_VALIDATION.md) |
+| Port Security | **VALIDATED** | [`PORT_SECURITY_VALIDATION.md`](PORT_SECURITY_VALIDATION.md) |
+| DHCP Snooping | **NOT VALIDATED / INVESTIGATION** | The attempted validation did not produce sufficient acceptance evidence. This setup-specific result is not a general conclusion about platform support. |
+
+The DAI contract below also remains a plan because it depends on a validated
+DHCP Snooping binding context.
 
 ## Preconditions and common controls
 
@@ -18,6 +29,10 @@ restricted to an isolated, synthetic lab with no production or customer data.
   extraction. A missing capability blocks the related PoC.
 
 ## PoC-1: Rogue DHCP behavior versus DHCP Snooping
+
+Status: **NOT VALIDATED / INVESTIGATION**. Do not report the attempted test as
+a successful PoC. Its inconclusive result does not establish that the platform
+generally lacks DHCP Snooping support.
 
 Threat class: rogue DHCP / DHCP spoofing. Analyzer scope: `DHCP-001`,
 `DHCP-002`, and `DHCP-003`.
@@ -97,9 +112,13 @@ crafting or exploit sequence is specified.
 - `poc2/dai-state-after.txt`: enabled VLAN/trust state and relevant counters.
 - `poc2/observation-after.*`: rejection plus legitimate-connectivity evidence.
 
-## Fallback: STP edge protection
+## Validated fallback: STP edge protection
 
-Use this only if either primary feature fails its harmless platform gate.
+Status: **VALIDATED**. The completed result and evidence are recorded in
+[`STP_BPDU_GUARD_VALIDATION.md`](STP_BPDU_GUARD_VALIDATION.md).
+
+The validation followed this fallback contract after the primary experiment
+did not satisfy its acceptance gate.
 
 1. Export a synthetic access-interface config with PortFast/admin-edge intent
    and without effective BPDU Guard.
@@ -113,6 +132,12 @@ Use this only if either primary feature fails its harmless platform gate.
 Packet Tracer officially documents PortFast/BPDU Guard configuration and may
 serve as a teaching fallback. Acceptance against an emulator still requires a
 platform/image-specific behavior gate.
+
+## Validated: Port Security
+
+Status: **VALIDATED**. The completed analyzer and enforcement transition is
+recorded in [`PORT_SECURITY_VALIDATION.md`](PORT_SECURITY_VALIDATION.md), with
+the before/after configuration excerpts under [`evidence/`](evidence/).
 
 ## Evidence integrity and result recording
 
