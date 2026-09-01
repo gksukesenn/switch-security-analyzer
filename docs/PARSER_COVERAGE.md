@@ -70,9 +70,9 @@ The unknown penalty is:
 
 An N/A base remains `UNKNOWN`; the unknown penalty cannot promote it to a
 numeric confidence level. These thresholds are provisional and require later
-calibration against representative real-device configurations. A possible
-future scoring gate may make posture score N/A below 0.60 coverage, but no
-posture scoring or gate is implemented in V1.
+calibration against representative real-device configurations. The current
+posture-scoring eligibility gate consumes Analysis Confidence together with
+the rule-assessment ratio; see [Security Posture Scoring V1](SCORING.md).
 
 ## Fixtures and limitations
 
