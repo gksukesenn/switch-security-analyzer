@@ -7,15 +7,28 @@ from src.api.schemas import (
     AnalysisResponse,
     AnalyzeRequest,
     AnalyzeResponse,
+    BatchAnalyzeRequest,
+    BatchAnalyzeResponse,
+    BatchDeviceResponse,
+    BatchStatisticsResponse,
     DeviceResponse,
     EvidenceResponse,
     FindingResponse,
     HealthResponse,
     PostureResponse,
     RulePenaltyResponse,
+    VendorStatisticsResponse,
 )
-from src.services.analysis import AnalysisApplicationService
 from src.domain.vendors import UnsupportedVendorError
+from src.services.analysis import (
+    AnalysisApplicationService,
+    ApplicationAnalysisResult,
+)
+from src.services.batch_analysis import (
+    BatchAnalysisService,
+    BatchDeviceInput,
+    InvalidBatchError,
+)
 
 
 MAX_CONFIG_BYTES = 1024 * 1024
@@ -23,6 +36,7 @@ MAX_CONFIG_BYTES = 1024 * 1024
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Switch Security Analyzer API", version="1.0")
 analysis_service = AnalysisApplicationService()
+batch_analysis_service = BatchAnalysisService(analysis_service)
 
 
 @app.exception_handler(Exception)
@@ -62,6 +76,69 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             status_code=422,
             detail=str(exception),
         ) from exception
+    return _analysis_response(result)
+
+
+@app.post("/analyze/batch", response_model=BatchAnalyzeResponse)
+async def analyze_batch(
+    request: BatchAnalyzeRequest,
+) -> BatchAnalyzeResponse:
+    for device in request.devices:
+        if len(device.config.encode("utf-8")) > MAX_CONFIG_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=(
+                    f"config for {device.device_id} exceeds the "
+                    f"{MAX_CONFIG_BYTES}-byte limit"
+                ),
+            )
+
+    try:
+        result = batch_analysis_service.analyze([
+            BatchDeviceInput(
+                device_id=device.device_id,
+                vendor=device.vendor,
+                config=device.config,
+            )
+            for device in request.devices
+        ])
+    except (InvalidBatchError, UnsupportedVendorError) as exception:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exception),
+        ) from exception
+
+    return BatchAnalyzeResponse(
+        devices=[
+            BatchDeviceResponse(
+                device_id=device.device_id,
+                **_analysis_response(device.analysis).model_dump(),
+            )
+            for device in result.devices
+        ],
+        statistics=BatchStatisticsResponse(
+            total_devices=result.statistics.total_devices,
+            total_findings=result.statistics.total_findings,
+            scored_devices=result.statistics.scored_devices,
+            unscored_devices=result.statistics.unscored_devices,
+            by_vendor={
+                vendor: VendorStatisticsResponse(
+                    device_count=statistics.device_count,
+                    finding_count=statistics.finding_count,
+                    scored_device_count=statistics.scored_device_count,
+                    unscored_device_count=statistics.unscored_device_count,
+                )
+                for vendor, statistics
+                in result.statistics.by_vendor.items()
+            },
+            by_category=result.statistics.by_category,
+        ),
+    )
+
+
+def _analysis_response(
+    result: ApplicationAnalysisResult,
+) -> AnalyzeResponse:
     posture = result.posture
 
     return AnalyzeResponse(

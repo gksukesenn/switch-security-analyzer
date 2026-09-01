@@ -101,6 +101,74 @@ rule-evidence order. When scoring is eligible, `rule_penalties` contains the
 existing scoring model's rule-level base penalty, exposure factor, violating
 units, and final penalty.
 
+## `POST /analyze/batch`
+
+The batch endpoint analyzes between 1 and 50 explicitly identified devices.
+Each device requires a unique, non-empty `device_id`, an explicit supported
+`vendor`, and a non-blank `config`:
+
+```json
+{
+  "devices": [
+    {
+      "device_id": "cisco-01",
+      "vendor": "cisco_ios",
+      "config": "hostname CISCO-01\nip http server\n"
+    },
+    {
+      "device_id": "aruba-01",
+      "vendor": "aruba_aos_cx",
+      "config": "hostname ARUBA-01\ndhcpv4-snooping\n"
+    }
+  ]
+}
+```
+
+V1 processes devices sequentially in request order through the same
+single-device pipeline used by `POST /analyze`. Device entries contain
+`device_id` plus the complete single-device `device`, `analysis`, `posture`,
+and `findings` sections. The response adds:
+
+```json
+{
+  "statistics": {
+    "total_devices": 2,
+    "total_findings": 3,
+    "scored_devices": 1,
+    "unscored_devices": 1,
+    "by_vendor": {
+      "cisco_ios": {
+        "device_count": 1,
+        "finding_count": 1,
+        "scored_device_count": 1,
+        "unscored_device_count": 0
+      },
+      "aruba_aos_cx": {
+        "device_count": 1,
+        "finding_count": 2,
+        "scored_device_count": 0,
+        "unscored_device_count": 1
+      }
+    },
+    "by_category": {
+      "DHCP_SPOOFING": 1,
+      "MGMT": 1,
+      "STP": 1
+    }
+  }
+}
+```
+
+Unavailable device scores and risk levels remain JSON `null`; they increment
+unscored counts and are never converted to zero. No average score or risk is
+reported.
+
+An empty batch, more than 50 devices, duplicate IDs, missing or blank values,
+and invalid vendors reject the whole request with `422`. Each config retains
+the existing 1 MiB UTF-8 limit; an oversized config returns `413`. V1 adds no
+separate total-request byte budget. It has no partial-success response, and an
+unexpected failure returns the same generic `500` as single-device analysis.
+
 ## N/A posture
 
 Unavailable posture values are JSON `null`, never numeric zero. This keeps an
@@ -127,9 +195,9 @@ Aruba AOS-CX 10.12/10.13 first-slice subset. Parser,
 safe-config renderer, and coverage registry are selected together from the
 explicit vendor identifier. V1
 does not provide authentication, production hardening, rate limiting, TLS
-termination, persistent storage, background processing, file upload, batch
-analysis, or a frontend. Vendor auto-detection and cross-vendor fallback are
-not provided.
+termination, persistent storage, background processing, file upload, or a
+frontend. Batch V1 is synchronous and sequential. Vendor auto-detection and
+cross-vendor fallback are not provided.
 
 Deployments must add authentication, transport security, request controls,
 and other operational protections outside this V1 application before any

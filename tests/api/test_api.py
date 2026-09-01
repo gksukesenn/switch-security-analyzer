@@ -2,6 +2,7 @@ import httpx
 import pytest
 
 from src.api.app import MAX_CONFIG_BYTES, analysis_service, app
+from src.services.batch_analysis import MAX_BATCH_DEVICES
 from src.services.analyzer import AnalyzerService
 
 
@@ -243,3 +244,128 @@ async def test_analyzer_service_public_contract_remains_findings_list():
 
     assert isinstance(findings, list)
     assert [finding.rule_id for finding in findings] == ["MGMT-002"]
+
+
+async def test_batch_analyze_preserves_order_and_aggregates_mixed_vendors():
+    response = await api_request(
+        "POST",
+        "/analyze/batch",
+        json={
+            "devices": [
+                {
+                    "device_id": "aruba-01",
+                    "vendor": "aruba_aos_cx",
+                    "config": (
+                        "dhcpv4-snooping\n"
+                        "vlan 10\n dhcpv4-snooping\n!\n"
+                        "interface 1/1/1\n"
+                        " no routing\n vlan access 20\n"
+                        " spanning-tree port-type admin-edge\n!\n"
+                    ),
+                },
+                {
+                    "device_id": "cisco-01",
+                    "vendor": "cisco_ios",
+                    "config": (
+                        "ip dhcp snooping\n"
+                        "ip dhcp snooping vlan 10\n"
+                        "ip arp inspection vlan 10\n"
+                        "ip http server\n"
+                        "interface GigabitEthernet1/0/1\n"
+                        " switchport mode access\n"
+                        " switchport access vlan 10\n"
+                        " switchport port-security\n"
+                        " spanning-tree portfast\n"
+                        " spanning-tree bpduguard enable\n"
+                        " ip verify source\n!\n"
+                        "line vty 0 4\n transport input ssh\n"
+                    ),
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [device["device_id"] for device in body["devices"]] == [
+        "aruba-01",
+        "cisco-01",
+    ]
+    assert body["devices"][0]["device"]["vendor"] == "aruba_aos_cx"
+    assert body["devices"][0]["posture"]["score"] is None
+    assert body["devices"][1]["device"]["vendor"] == "cisco_ios"
+    assert body["devices"][1]["posture"]["score"] == 85.0
+    assert body["statistics"] == {
+        "total_devices": 2,
+        "total_findings": 3,
+        "scored_devices": 1,
+        "unscored_devices": 1,
+        "by_vendor": {
+            "cisco_ios": {
+                "device_count": 1,
+                "finding_count": 1,
+                "scored_device_count": 1,
+                "unscored_device_count": 0,
+            },
+            "aruba_aos_cx": {
+                "device_count": 1,
+                "finding_count": 2,
+                "scored_device_count": 0,
+                "unscored_device_count": 1,
+            },
+        },
+        "by_category": {
+            "DHCP_SPOOFING": 1,
+            "MGMT": 1,
+            "STP": 1,
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"devices": []},
+        {
+            "devices": [
+                {"device_id": "same", "vendor": "cisco_ios", "config": "x"},
+                {"device_id": "same", "vendor": "aruba_aos_cx", "config": "y"},
+            ]
+        },
+        {
+            "devices": [
+                {
+                    "device_id": str(index),
+                    "vendor": "cisco_ios",
+                    "config": "hostname SW",
+                }
+                for index in range(MAX_BATCH_DEVICES + 1)
+            ]
+        },
+    ],
+)
+async def test_batch_analyze_rejects_invalid_batch(payload):
+    response = await api_request("POST", "/analyze/batch", json=payload)
+
+    assert response.status_code == 422
+
+
+async def test_batch_analyze_enforces_per_config_byte_limit():
+    response = await api_request(
+        "POST",
+        "/analyze/batch",
+        json={
+            "devices": [{
+                "device_id": "large",
+                "vendor": "cisco_ios",
+                "config": "x" * (MAX_CONFIG_BYTES + 1),
+            }]
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {
+        "detail": (
+            f"config for large exceeds the {MAX_CONFIG_BYTES}-byte limit"
+        )
+    }

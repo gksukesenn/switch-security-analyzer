@@ -27,3 +27,8 @@ fixture naturally reaches five assessed rules, so its 5/9 assessment ratio
 produces `score=N/A`. This does not imply a worse security result; it reflects
 that four controls are not yet assessed. See `ARUBA_AOS_CX.md` for the current
 scope.
+
+Batch Analysis can select both vendor pipelines within one request. Each
+device's explicit vendor is passed through the same single-device application
+service, and batch logic only aggregates the returned results. It does not
+auto-detect vendors or combine vendor scoring semantics.
