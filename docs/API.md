@@ -214,9 +214,9 @@ Aruba AOS-CX 10.12/10.13 first-slice subset. Parser,
 safe-config renderer, and coverage registry are selected together from the
 explicit vendor identifier. V1
 does not provide authentication, production hardening, rate limiting, TLS
-termination, persistent storage, background processing, or a frontend. Batch
-V1 is synchronous and sequential. Vendor auto-detection and
-cross-vendor fallback are not provided.
+termination, persistent storage, or background processing. Batch V1 is
+synchronous and sequential. Vendor auto-detection and cross-vendor fallback
+are not provided.
 
 Deployments must add authentication, transport security, request controls,
 and other operational protections outside this V1 application before any
