@@ -85,8 +85,47 @@ Analyze one Cisco sample with the CLI:
 python -m src.cli samples/cisco/mgmt_002_http_enabled.cfg
 ```
 
-The CLI is the existing Cisco single-config interface. Multi-vendor analysis
-is exposed through the API.
+This command is the existing local/offline Cisco single-config CLI. It invokes
+the analyzer directly and remains separate from the HTTP client documented
+below.
+
+## HTTP CLI client
+
+Start the server in one terminal:
+
+```bash
+docker compose up --build
+```
+
+Then upload a configuration from another terminal through the HTTP API:
+
+```bash
+python -m src.client.cli \
+  --vendor cisco_ios \
+  --file switch.cfg
+```
+
+The client defaults to `http://localhost:8000`. To use a remote analyzer:
+
+```bash
+python -m src.client.cli \
+  --server http://SERVER:8000 \
+  --vendor cisco_ios \
+  --file switch.cfg
+```
+
+Configuration text can instead be read from standard input:
+
+```bash
+cat switch.cfg | python -m src.client.cli \
+  --vendor cisco_ios \
+  --stdin
+```
+
+The HTTP client only sends input to the selected server and renders its API
+response. It does not invoke the local analyzer pipeline. The browser UI is
+available at [http://localhost:8000](http://localhost:8000), with Swagger API
+documentation at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 ## API
 
