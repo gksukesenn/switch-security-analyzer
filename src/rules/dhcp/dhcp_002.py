@@ -113,5 +113,11 @@ class DHCP002AccessVlanNotCoveredRule:
                 interface.access_vlan_evidence,
             ) if line is not None)
 
-        evidence.sort(key=lambda line: line.line_number)
-        return evidence
+        unique_evidence = {
+            (line.line_number, line.text): line
+            for line in evidence
+        }
+        return sorted(
+            unique_evidence.values(),
+            key=lambda line: line.line_number,
+        )

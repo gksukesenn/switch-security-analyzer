@@ -111,6 +111,41 @@ interface GigabitEthernet1/0/5
     assert findings == []
 
 
+def test_dhcp_002_honors_mixed_list_and_range_vlan_scope():
+    raw_config = """ip dhcp snooping
+ip dhcp snooping vlan 10,601-620,777
+"""
+    for index, vlan_id in enumerate((10, 615, 616, 20, 22, 70), start=1):
+        raw_config += f"""interface GigabitEthernet1/0/{index}
+ switchport mode access
+ switchport access vlan {vlan_id}
+!
+"""
+
+    findings = evaluate(raw_config)
+
+    assert [finding.safe_config_example for finding in findings] == [
+        "ip dhcp snooping\nip dhcp snooping vlan 20",
+        "ip dhcp snooping\nip dhcp snooping vlan 22",
+        "ip dhcp snooping\nip dhcp snooping vlan 70",
+    ]
+
+    vlan_20_evidence = [
+        (line.line_number, line.text.strip())
+        for line in findings[0].evidence
+    ]
+    assert vlan_20_evidence == [
+        (1, "ip dhcp snooping"),
+        (2, "ip dhcp snooping vlan 10,601-620,777"),
+        (15, "interface GigabitEthernet1/0/4"),
+        (16, "switchport mode access"),
+        (17, "switchport access vlan 20"),
+    ]
+    assert vlan_20_evidence.count(
+        (2, "ip dhcp snooping vlan 10,601-620,777")
+    ) == 1
+
+
 def test_dhcp_002_does_not_fire_for_trunk_interface():
     findings = evaluate("""ip dhcp snooping
 interface GigabitEthernet1/0/48

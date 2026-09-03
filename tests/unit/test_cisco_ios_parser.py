@@ -67,6 +67,60 @@ interface GigabitEthernet1/0/5
     )
 
 
+def test_parser_reads_single_dhcp_snooping_vlan():
+    config = CiscoIOSParser().parse("ip dhcp snooping vlan 10")
+
+    assert config.dhcp_snooping_vlans == {10}
+    assert config.dhcp_snooping_vlan_evidence[10].line_number == 1
+
+
+def test_parser_reads_comma_separated_dhcp_snooping_vlans():
+    config = CiscoIOSParser().parse("ip dhcp snooping vlan 10,20,30")
+
+    assert config.dhcp_snooping_vlans == {10, 20, 30}
+    assert set(config.dhcp_snooping_vlan_evidence) == {10, 20, 30}
+
+
+def test_parser_expands_dhcp_snooping_vlan_range_inclusively():
+    config = CiscoIOSParser().parse("ip dhcp snooping vlan 601-620")
+
+    assert config.dhcp_snooping_vlans == set(range(601, 621))
+    assert set(config.dhcp_snooping_vlan_evidence) == set(range(601, 621))
+
+
+def test_parser_reads_mixed_dhcp_snooping_vlan_expression():
+    config = CiscoIOSParser().parse("ip dhcp snooping vlan 10,20-22,30")
+
+    assert config.dhcp_snooping_vlans == {10, 20, 21, 22, 30}
+    assert set(config.dhcp_snooping_vlan_evidence) == {
+        10, 20, 21, 22, 30,
+    }
+
+
+def test_parser_reads_real_world_dhcp_snooping_vlan_expression():
+    line = "ip dhcp snooping vlan 10,601-620,777"
+    config = CiscoIOSParser().parse(line)
+    expected_vlans = {10, *range(601, 621), 777}
+
+    assert config.dhcp_snooping_vlans == expected_vlans
+    assert set(config.dhcp_snooping_vlan_evidence) == expected_vlans
+    assert all(
+        evidence.line_number == 1 and evidence.text == line
+        for evidence in config.dhcp_snooping_vlan_evidence.values()
+    )
+
+
+def test_parser_rejects_malformed_dhcp_snooping_expression_atomically():
+    line = "ip dhcp snooping vlan 10,broken,20-22"
+    config = CiscoIOSParser().parse(line)
+
+    assert config.dhcp_snooping_vlans == set()
+    assert config.dhcp_snooping_vlan_evidence == {}
+    assert [(item.line_number, item.text) for item in config.unparsed_lines] == [
+        (1, line),
+    ]
+
+
 def test_parser_reads_port_security_states():
     raw_config = """interface GigabitEthernet1/0/1
  switchport port-security

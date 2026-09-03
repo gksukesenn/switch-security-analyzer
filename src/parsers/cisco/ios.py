@@ -235,10 +235,13 @@ class CiscoIOSParser:
                 ).strip()
 
                 try:
-                    vlan_id = int(vlan_text)
-                    
-                    config.dhcp_snooping_vlans.add(vlan_id)
-                    config.dhcp_snooping_vlan_evidence[vlan_id] = source_line
+                    vlan_ids = self._parse_vlan_expression(vlan_text)
+
+                    config.dhcp_snooping_vlans.update(vlan_ids)
+                    for vlan_id in vlan_ids:
+                        config.dhcp_snooping_vlan_evidence[vlan_id] = (
+                            source_line
+                        )
                     self._record_supported(config, source_line)
                 except ValueError:
                     config.unparsed_lines.append(source_line)
@@ -293,6 +296,32 @@ class CiscoIOSParser:
                 config.unparsed_lines.append(source_line)
 
         return config
+
+    @staticmethod
+    def _parse_vlan_expression(vlan_text: str) -> set[int]:
+        vlan_ids: set[int] = set()
+
+        for item in vlan_text.split(","):
+            item = item.strip()
+            if not item:
+                raise ValueError("empty VLAN expression item")
+
+            if "-" not in item:
+                vlan_ids.add(int(item))
+                continue
+
+            range_parts = item.split("-")
+            if len(range_parts) != 2:
+                raise ValueError("malformed VLAN range")
+
+            start = int(range_parts[0].strip())
+            end = int(range_parts[1].strip())
+            if start > end:
+                raise ValueError("descending VLAN range")
+
+            vlan_ids.update(range(start, end + 1))
+
+        return vlan_ids
 
     @staticmethod
     def _parse_transport_input(
