@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Analyze supported switch configurations for security findings.">
+    <title>Switch Security Analyzer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="page-width">
+        <p class="eyebrow">Configuration security review</p>
+        <h1>Switch Security Analyzer</h1>
+        <p class="intro">
+          Upload or paste a supported switch configuration to review its
+          security posture, analysis coverage, and actionable findings.
+        </p>
+      </div>
+    </header>
+
+    <main class="page-width">
+      <section class="panel input-panel" aria-labelledby="analyze-heading">
+        <div>
+          <h2 id="analyze-heading">Analyze a configuration</h2>
+          <p class="section-copy">
+            Configurations are analyzed locally by this server and are not
+            persisted. UTF-8 input up to 1 MiB is supported.
+          </p>
+        </div>
+
+        <form id="analysis-form" action="/analyze/file" method="post" enctype="multipart/form-data">
+          <div class="field">
+            <label for="vendor">Vendor / Platform</label>
+            <select id="vendor" name="vendor" required>
+              <option value="cisco_ios">Cisco IOS / IOS-XE</option>
+              <option value="aruba_aos_cx">Aruba AOS-CX</option>
+            </select>
+          </div>
+
+          <div class="mode-switch" role="tablist" aria-label="Configuration input method">
+            <button
+              class="mode-button active"
+              id="file-mode-button"
+              type="button"
+              role="tab"
+              aria-controls="file-mode"
+              aria-selected="true"
+              data-mode="file"
+            >Upload File</button>
+            <button
+              class="mode-button"
+              id="paste-mode-button"
+              type="button"
+              role="tab"
+              aria-controls="paste-mode"
+              aria-selected="false"
+              data-mode="paste"
+            >Paste Configuration</button>
+          </div>
+
+          <div id="file-mode" class="input-mode" role="tabpanel" aria-labelledby="file-mode-button">
+            <div class="field">
+              <label for="config-file">Configuration file</label>
+              <input id="config-file" name="file" type="file" required>
+              <span id="file-help" class="field-help">Choose a local configuration file.</span>
+            </div>
+          </div>
+
+          <div
+            id="paste-mode"
+            class="input-mode"
+            role="tabpanel"
+            aria-labelledby="paste-mode-button"
+            hidden
+          >
+            <div class="field">
+              <label for="config-text">Raw switch configuration</label>
+              <textarea
+                id="config-text"
+                name="config"
+                rows="12"
+                placeholder="Paste configuration text here…"
+              ></textarea>
+              <span class="field-help">Paste raw UTF-8 configuration text, up to 1 MiB.</span>
+            </div>
+          </div>
+
+          <button id="analyze-button" type="submit">Analyze</button>
+        </form>
+
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </section>
+
+      <section id="results" class="results" aria-live="polite" hidden>
+        <div class="results-heading">
+          <div>
+            <p class="eyebrow">Analysis result</p>
+            <h2>Security posture</h2>
+          </div>
+          <p id="result-summary" class="result-summary"></p>
+        </div>
+
+        <div class="summary-grid">
+          <article class="panel metric-card">
+            <h3>Device</h3>
+            <dl id="device-summary"></dl>
+          </article>
+          <article class="panel score-card">
+            <h3>Overall score</h3>
+            <p id="score" class="score">N/A</p>
+            <p id="risk" class="risk"></p>
+          </article>
+          <article class="panel metric-card">
+            <h3>Analysis scope</h3>
+            <dl id="analysis-summary"></dl>
+          </article>
+        </div>
+
+        <section aria-labelledby="findings-heading">
+          <div class="findings-heading">
+            <h2 id="findings-heading">Findings</h2>
+            <span id="finding-count" class="count-badge"></span>
+          </div>
+          <div id="findings" class="findings-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="page-width">
+      <p>Results reflect supported analyzer scope and are not a security certification.</p>
+      <a href="/docs">API documentation</a>
+    </footer>
+  </body>
+</html>

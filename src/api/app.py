@@ -1,7 +1,8 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from python_multipart import MultipartParser
 from python_multipart.exceptions import MultipartParseError
 from python_multipart.multipart import parse_options_header
@@ -36,6 +37,14 @@ from src.services.batch_analysis import (
 
 MAX_CONFIG_BYTES = 1024 * 1024
 MAX_MULTIPART_OVERHEAD_BYTES = 64 * 1024
+WEB_ROOT = Path(__file__).resolve().parents[1] / "web"
+INDEX_HTML = (WEB_ROOT / "templates" / "index.html").read_text(
+    encoding="utf-8"
+)
+STYLES_CSS = (WEB_ROOT / "static" / "styles.css").read_text(
+    encoding="utf-8"
+)
+APP_JS = (WEB_ROOT / "static" / "app.js").read_text(encoding="utf-8")
 
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Switch Security Analyzer API", version="1.0")
@@ -58,6 +67,21 @@ async def unexpected_exception_handler(
         status_code=500,
         content={"detail": "Internal server error"},
     )
+
+
+@app.get("/", include_in_schema=False)
+async def index() -> HTMLResponse:
+    return HTMLResponse(INDEX_HTML)
+
+
+@app.get("/static/styles.css", include_in_schema=False)
+async def styles() -> Response:
+    return Response(STYLES_CSS, media_type="text/css")
+
+
+@app.get("/static/app.js", include_in_schema=False)
+async def javascript() -> Response:
+    return Response(APP_JS, media_type="text/javascript")
 
 
 @app.get("/health", response_model=HealthResponse)

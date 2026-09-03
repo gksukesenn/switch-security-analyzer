@@ -135,6 +135,12 @@ Or use the single-service Compose definition:
 docker compose up --build
 ```
 
+Then open [http://localhost:8000](http://localhost:8000) to select a platform,
+upload a local configuration file, and view its posture and findings. Swagger
+API documentation remains available at
+[http://localhost:8000/docs](http://localhost:8000/docs), and the API and CLI
+examples above remain supported.
+
 The image contains only the API application and runtime dependencies. It does
 not package CML, switch images, VM artefacts, lab tooling, tests, or secrets.
 
@@ -155,7 +161,7 @@ is tracked in [Release checklist](docs/RELEASE_CHECKLIST.md).
 - Aruba support is only the documented partial first slice.
 - Vendor/platform/release defaults are not inferred unless explicitly modeled.
 - There is no authentication, TLS termination, rate limiting, aggregate HTTP
-  body cap, persistent storage, frontend, or vendor auto-detection.
+  body cap, persistent storage, or vendor auto-detection.
 - Production exposure requires external authentication, transport security,
   deployment-level request controls, logging, and operational monitoring.
 

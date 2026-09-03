@@ -33,6 +33,42 @@ async def test_health():
     assert response.json() == {"status": "ok"}
 
 
+async def test_browser_ui_serves_analyzer_page():
+    response = await api_request("GET", "/")
+
+    assert response.status_code == 200
+    assert "Switch Security Analyzer" in response.text
+    assert 'action="/analyze/file"' in response.text
+    assert "Upload File" in response.text
+    assert "Paste Configuration" in response.text
+    assert 'id="config-text"' in response.text
+    assert 'value="cisco_ios"' in response.text
+    assert 'value="aruba_aos_cx"' in response.text
+
+
+async def test_browser_ui_stylesheet_is_served():
+    response = await api_request("GET", "/static/styles.css")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/css")
+
+
+async def test_browser_ui_javascript_uses_existing_analysis_endpoints():
+    response = await api_request("GET", "/static/app.js")
+
+    assert response.status_code == 200
+    assert "fetch(\"/analyze/file\"" in response.text
+    assert "fetch(\"/analyze\"" in response.text
+    assert "renderAnalysis(payload)" in response.text
+
+
+async def test_swagger_docs_remain_accessible():
+    response = await api_request("GET", "/docs")
+
+    assert response.status_code == 200
+    assert "swagger-ui" in response.text
+
+
 async def test_analyze_serializes_insecure_http_finding():
     response = await api_request(
         "POST",
