@@ -95,6 +95,133 @@ async def test_unknown_vendor_is_rejected():
     assert response.status_code == 422
 
 
+async def test_analyze_file_accepts_cisco_config():
+    response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "cisco_ios"},
+        files={
+            "file": (
+                "untrusted-name.cfg",
+                b"hostname ACCESS-SW-01\nip http server\n",
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["device"] == {
+        "vendor": "cisco_ios",
+        "hostname": "ACCESS-SW-01",
+    }
+    assert [finding["rule_id"] for finding in body["findings"]] == [
+        "MGMT-002"
+    ]
+
+
+async def test_analyze_file_accepts_aruba_config():
+    response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "aruba_aos_cx"},
+        files={
+            "file": (
+                "switch.txt",
+                (
+                    b"dhcpv4-snooping\n"
+                    b"vlan 10\n dhcpv4-snooping\n!\n"
+                    b"interface 1/1/1\n no routing\n vlan access 20\n!\n"
+                ),
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["device"]["vendor"] == "aruba_aos_cx"
+    assert [finding["rule_id"] for finding in response.json()["findings"]] == [
+        "DHCP-002"
+    ]
+
+
+async def test_analyze_file_rejects_unknown_vendor():
+    response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "unknown_vendor"},
+        files={"file": ("switch.cfg", b"hostname SW1", "text/plain")},
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("content", [b"", b" \n\t"])
+async def test_analyze_file_rejects_empty_config(content):
+    response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "cisco_ios"},
+        files={"file": ("switch.cfg", content, "text/plain")},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "config must not be empty or whitespace-only"
+    }
+
+
+async def test_analyze_file_rejects_oversized_config():
+    response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "cisco_ios"},
+        files={
+            "file": (
+                "switch.cfg",
+                b"x" * (MAX_CONFIG_BYTES + 1),
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {
+        "detail": f"config exceeds the {MAX_CONFIG_BYTES}-byte limit"
+    }
+
+
+async def test_analyze_file_rejects_invalid_utf8():
+    response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "cisco_ios"},
+        files={"file": ("switch.cfg", b"hostname SW1\n\xff", "text/plain")},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": "config must be valid UTF-8 text"}
+
+
+async def test_analyze_file_response_matches_json_analyze():
+    config = "hostname ACCESS-SW-01\nip http server\n"
+    json_response = await api_request(
+        "POST",
+        "/analyze",
+        json={"vendor": "cisco_ios", "config": config},
+    )
+    file_response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "cisco_ios"},
+        files={"file": ("switch.conf", config.encode(), "application/octet-stream")},
+    )
+
+    assert json_response.status_code == 200
+    assert file_response.status_code == 200
+    assert file_response.json() == json_response.json()
+
+
 async def test_aruba_vendor_uses_aruba_pipeline():
     response = await api_request(
         "POST",

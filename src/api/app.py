@@ -2,6 +2,9 @@ import logging
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from python_multipart import MultipartParser
+from python_multipart.exceptions import MultipartParseError
+from python_multipart.multipart import parse_options_header
 
 from src.api.schemas import (
     AnalysisResponse,
@@ -19,7 +22,7 @@ from src.api.schemas import (
     RulePenaltyResponse,
     VendorStatisticsResponse,
 )
-from src.domain.vendors import UnsupportedVendorError
+from src.domain.vendors import UnsupportedVendorError, Vendor
 from src.services.analysis import (
     AnalysisApplicationService,
     ApplicationAnalysisResult,
@@ -32,6 +35,7 @@ from src.services.batch_analysis import (
 
 
 MAX_CONFIG_BYTES = 1024 * 1024
+MAX_MULTIPART_OVERHEAD_BYTES = 64 * 1024
 
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Switch Security Analyzer API", version="1.0")
@@ -77,6 +81,157 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             detail=str(exception),
         ) from exception
     return _analysis_response(result)
+
+
+@app.post("/analyze/file", response_model=AnalyzeResponse)
+async def analyze_file(
+    request: Request,
+) -> AnalyzeResponse:
+    raw_config, raw_vendor = await _read_multipart_analysis_request(request)
+
+    try:
+        config = raw_config.decode("utf-8")
+    except UnicodeDecodeError as exception:
+        raise HTTPException(
+            status_code=422,
+            detail="config must be valid UTF-8 text",
+        ) from exception
+
+    if not config.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="config must not be empty or whitespace-only",
+        )
+
+    try:
+        vendor = Vendor(raw_vendor.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exception:
+        raise HTTPException(
+            status_code=422,
+            detail="vendor is not supported",
+        ) from exception
+
+    try:
+        result = analysis_service.analyze(config, vendor)
+    except UnsupportedVendorError as exception:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exception),
+        ) from exception
+    return _analysis_response(result)
+
+
+async def _read_multipart_analysis_request(
+    request: Request,
+) -> tuple[bytes, bytes]:
+    media_type, options = parse_options_header(
+        request.headers.get("content-type")
+    )
+    boundary = options.get(b"boundary")
+    if media_type != b"multipart/form-data" or not boundary:
+        raise HTTPException(
+            status_code=422,
+            detail="multipart/form-data with file and vendor is required",
+        )
+
+    header_name = bytearray()
+    header_value = bytearray()
+    headers: dict[bytes, bytes] = {}
+    part_name: bytes | None = None
+    values: dict[bytes, bytearray] = {}
+    parsing_complete = False
+
+    def on_part_begin() -> None:
+        nonlocal part_name
+        headers.clear()
+        part_name = None
+
+    def on_header_field(data: bytes, start: int, end: int) -> None:
+        header_name.extend(data[start:end])
+
+    def on_header_value(data: bytes, start: int, end: int) -> None:
+        header_value.extend(data[start:end])
+
+    def on_header_end() -> None:
+        if len(header_name) > 8192 or len(header_value) > 8192:
+            raise HTTPException(status_code=422, detail="invalid multipart data")
+        headers[bytes(header_name).lower()] = bytes(header_value)
+        header_name.clear()
+        header_value.clear()
+
+    def on_headers_finished() -> None:
+        nonlocal part_name
+        _, disposition = parse_options_header(
+            headers.get(b"content-disposition")
+        )
+        part_name = disposition.get(b"name")
+        if part_name in (b"file", b"vendor"):
+            if part_name in values:
+                raise HTTPException(
+                    status_code=422,
+                    detail="file and vendor must each be provided once",
+                )
+            values[part_name] = bytearray()
+
+    def on_part_data(data: bytes, start: int, end: int) -> None:
+        if part_name not in values:
+            return
+        value = values[part_name]
+        value.extend(data[start:end])
+        limit = MAX_CONFIG_BYTES if part_name == b"file" else 128
+        if len(value) > limit:
+            if part_name == b"file":
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"config exceeds the {MAX_CONFIG_BYTES}-byte limit",
+                )
+            raise HTTPException(status_code=422, detail="invalid vendor")
+
+    def on_end() -> None:
+        nonlocal parsing_complete
+        parsing_complete = True
+
+    parser = MultipartParser(
+        boundary,
+        {
+            "on_part_begin": on_part_begin,
+            "on_header_field": on_header_field,
+            "on_header_value": on_header_value,
+            "on_header_end": on_header_end,
+            "on_headers_finished": on_headers_finished,
+            "on_part_data": on_part_data,
+            "on_end": on_end,
+        },
+    )
+    request_bytes = 0
+    try:
+        async for chunk in request.stream():
+            request_bytes += len(chunk)
+            if request_bytes > (
+                MAX_CONFIG_BYTES + MAX_MULTIPART_OVERHEAD_BYTES
+            ):
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"config exceeds the {MAX_CONFIG_BYTES}-byte limit",
+                )
+            parser.write(chunk)
+        parser.finalize()
+    except MultipartParseError as exception:
+        raise HTTPException(
+            status_code=422,
+            detail="invalid multipart data",
+        ) from exception
+
+    if (
+        not parsing_complete
+        or b"file" not in values
+        or b"vendor" not in values
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="file and vendor are required",
+        )
+    return bytes(values[b"file"]), bytes(values[b"vendor"])
 
 
 @app.post("/analyze/batch", response_model=BatchAnalyzeResponse)

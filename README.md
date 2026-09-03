@@ -98,6 +98,14 @@ curl --fail --request POST http://127.0.0.1:8000/analyze \
   --data '{"vendor":"cisco_ios","config":"hostname ACCESS-SW-01\nip http server\n"}'
 ```
 
+File upload analysis:
+
+```bash
+curl --fail --request POST http://127.0.0.1:8000/analyze/file \
+  --form 'vendor=cisco_ios' \
+  --form 'file=@switch.cfg;type=text/plain'
+```
+
 Mixed batch analysis:
 
 ```bash
@@ -107,7 +115,7 @@ curl --fail --request POST http://127.0.0.1:8000/analyze/batch \
 ```
 
 The API limits each UTF-8 configuration to 1 MiB and each batch to 50 devices.
-See the complete [single and batch API contract](docs/API.md) and
+See the complete [API contract](docs/API.md) and
 [batch behavior](docs/BATCH_ANALYSIS.md).
 
 ## Docker

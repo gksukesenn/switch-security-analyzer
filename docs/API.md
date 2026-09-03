@@ -101,6 +101,24 @@ rule-evidence order. When scoring is eligible, `rule_penalties` contains the
 existing scoring model's rule-level base penalty, exposure factor, violating
 units, and final penalty.
 
+## `POST /analyze/file`
+
+The file endpoint accepts `multipart/form-data` with a required `file` upload
+and an explicit `vendor` field. It reads the upload in memory as strict UTF-8
+text and sends it through the same single-device analysis pipeline as
+`POST /analyze`; its response schema is identical.
+
+```bash
+curl --request POST http://127.0.0.1:8000/analyze/file \
+  --form 'vendor=cisco_ios' \
+  --form 'file=@switch.cfg;type=text/plain'
+```
+
+The uploaded content must be non-blank and no larger than 1 MiB. The filename
+and media type are treated as untrusted metadata: they neither select the
+vendor nor determine whether the content is accepted. Uploaded configurations
+are not persisted.
+
 ## `POST /analyze/batch`
 
 The batch endpoint analyzes between 1 and 50 explicitly identified devices.
@@ -181,7 +199,8 @@ relevant syntax is present.
 
 ## Validation and errors
 
-- Missing fields, wrong types, blank config, and malformed JSON return `422`.
+- Missing fields, wrong types, blank config, invalid UTF-8 file content, and
+  malformed JSON return `422`.
 - Unknown vendors return `422`. Supported explicit identifiers are `cisco_ios`
   and `aruba_aos_cx`; neither ever falls back to the other vendor's pipeline.
 - Config input larger than 1 MiB returns `413`.
@@ -195,8 +214,8 @@ Aruba AOS-CX 10.12/10.13 first-slice subset. Parser,
 safe-config renderer, and coverage registry are selected together from the
 explicit vendor identifier. V1
 does not provide authentication, production hardening, rate limiting, TLS
-termination, persistent storage, background processing, file upload, or a
-frontend. Batch V1 is synchronous and sequential. Vendor auto-detection and
+termination, persistent storage, background processing, or a frontend. Batch
+V1 is synchronous and sequential. Vendor auto-detection and
 cross-vendor fallback are not provided.
 
 Deployments must add authentication, transport security, request controls,
