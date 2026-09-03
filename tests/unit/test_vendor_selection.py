@@ -1,9 +1,12 @@
+from src.coverage.aruba_aos_s_registry import ArubaAOSSCoverageRegistry
 from src.coverage.aruba_registry import ArubaCoverageRegistry
 from src.coverage.cisco_registry import CiscoCoverageRegistry
 from src.domain.vendors import Vendor
+from src.parsers.aruba.aos_s import ArubaAOSSParser
 from src.parsers.aruba.aos_cx import ArubaAOSCXParser
 from src.parsers.cisco.ios import CiscoIOSParser
 from src.renderers.safe_config import (
+    ArubaAOSSafeConfigRenderer,
     ArubaSafeConfigRenderer,
     CiscoSafeConfigRenderer,
 )
@@ -64,4 +67,17 @@ def test_aruba_components_are_selected_together_without_cisco_fallback():
     assert not isinstance(components.renderer, CiscoSafeConfigRenderer)
     assert not isinstance(
         components.coverage_registry, CiscoCoverageRegistry
+    )
+
+
+def test_aruba_aos_s_components_are_selected_together():
+    components = VendorComponentSelector().components_for(
+        Vendor.ARUBA_AOS_S
+    )
+
+    assert isinstance(components.parser, ArubaAOSSParser)
+    assert isinstance(components.renderer, ArubaAOSSafeConfigRenderer)
+    assert isinstance(
+        components.coverage_registry,
+        ArubaAOSSCoverageRegistry,
     )

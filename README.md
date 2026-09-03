@@ -6,8 +6,9 @@ source-line evidence, remediation guidance, and safe configuration examples.
 
 Vendor-specific syntax is normalized before rules run, keeping detection logic
 portable and testable. The current implementation supports scoped Cisco IOS /
-IOS-XE analysis and a deliberately limited Aruba AOS-CX first slice, exposed
-through a REST API, HTTP CLI client, browser UI, and local/offline CLI.
+IOS-XE analysis plus distinct, deliberately limited Aruba AOS-CX and
+ArubaOS-Switch first slices, exposed through a REST API, HTTP CLI client,
+browser UI, and local/offline CLI.
 
 ## Highlights
 
@@ -79,10 +80,12 @@ renderer, and coverage registry selection is centralized in
 |---|---|
 | `cisco_ios` | Main implementation: scoped Cisco IOS / IOS-XE command families and all nine registered rules when applicable context is present |
 | `aruba_aos_cx` | Limited AOS-CX 10.12/10.13 slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001`, and `STP-001` |
+| `aruba_aos_s` | Limited ArubaOS-Switch / 2930F slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, and `DAI-001` where static evidence permits |
 
 Vendor selection is explicit; syntax auto-detection and cross-vendor fallback
-are not implemented. See [Aruba AOS-CX V1 scope](docs/ARUBA_AOS_CX.md) and
-[multi-vendor direction](docs/MULTI_VENDOR.md).
+are not implemented. See [Aruba AOS-CX scope](docs/ARUBA_AOS_CX.md),
+[ArubaOS-Switch scope](docs/ARUBA_AOS_S.md), and
+[multi-vendor architecture](docs/MULTI_VENDOR.md).
 
 ## Security checks
 
@@ -163,7 +166,7 @@ coverage and posture envelope.
 
 ## Validation
 
-The current automated suite has **384 passing tests** across parsers, rules,
+The current automated suite has **441 passing tests** across parsers, rules,
 domain models, scoring, APIs, browser contracts, both CLIs, golden outputs,
 and cross-vendor semantic parity.
 
@@ -186,9 +189,10 @@ See the [lab validation plan and status](docs/POC/LAB_VALIDATION_PLAN.md),
 
 ## Project status and limitations
 
-- **Implemented:** the two documented vendor scopes, nine-rule engine,
+- **Implemented:** the three documented platform scopes, nine-rule engine,
   coverage/scoring pipeline, API, browser UI, both CLIs, and Docker packaging.
-- **Validated:** the automated suite plus the two lab controls listed above.
+- **Validated:** the automated suite, a bounded external AOS-S configuration
+  check, and the two defensive lab controls listed above.
 - **Future work — not implemented:** broader vendor/syntax/rule coverage,
   representative-data calibration, production hardening, and additional lab
   validation.
@@ -200,7 +204,9 @@ parser gaps, rule boundaries, and provisional thresholds are documented in
 ## Documentation
 
 - [REST API](docs/API.md) · [Batch analysis](docs/BATCH_ANALYSIS.md)
-- [Aruba scope](docs/ARUBA_AOS_CX.md) · [Multi-vendor direction](docs/MULTI_VENDOR.md)
+- [Aruba AOS-CX](docs/ARUBA_AOS_CX.md) ·
+  [ArubaOS-Switch](docs/ARUBA_AOS_S.md) ·
+  [Multi-vendor architecture](docs/MULTI_VENDOR.md)
 - [Parser Coverage](docs/PARSER_COVERAGE.md) · [Scoring](docs/SCORING.md)
 - [Rule authoring](docs/RULE_AUTHORING.md) · [Known limitations](docs/KNOWN_LIMITATIONS.md)
 - [Demo](docs/DEMO.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)

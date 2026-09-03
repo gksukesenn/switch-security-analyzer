@@ -54,7 +54,10 @@ def test_server_trailing_slashes_are_normalized():
     assert client.server_url == "http://localhost:8000"
 
 
-@pytest.mark.parametrize("vendor", ["cisco_ios", "aruba_aos_cx"])
+@pytest.mark.parametrize(
+    "vendor",
+    ["cisco_ios", "aruba_aos_cx", "aruba_aos_s"],
+)
 def test_file_request_uses_multipart_for_supported_vendor(tmp_path, vendor):
     config_path = tmp_path / "synthetic.cfg"
     config_path.write_text("hostname TEST\n", encoding="utf-8")
@@ -93,6 +96,31 @@ def test_stdin_text_request_uses_json_contract():
     )
 
     client.analyze_text("hostname STDIN\n", "cisco_ios")
+
+
+def test_cli_sends_aruba_aos_s_enum_value_unchanged(monkeypatch):
+    sent = {}
+
+    class RecordingClient:
+        def __init__(self, server_url):
+            pass
+
+        def analyze_text(self, config, vendor):
+            sent["vendor"] = vendor
+            response = analysis_response()
+            response["device"]["vendor"] = vendor
+            return response
+
+    monkeypatch.setattr(cli, "AnalyzerHttpClient", RecordingClient)
+
+    exit_code = cli.main(
+        ["--vendor", "aruba_aos_s", "--stdin"],
+        stdin=io.StringIO("dhcp-snooping\n"),
+        stdout=io.StringIO(),
+    )
+
+    assert exit_code == 0
+    assert sent["vendor"] == "aruba_aos_s"
 
 
 def test_missing_file_returns_input_error(tmp_path):

@@ -1,4 +1,5 @@
 from src.renderers.safe_config import (
+    ArubaAOSSafeConfigRenderer,
     ArubaSafeConfigRenderer,
     CiscoSafeConfigRenderer,
     SafeConfigRenderer,
@@ -7,6 +8,7 @@ from src.renderers.safe_config import (
 )
 
 __all__ = [
+    "ArubaAOSSafeConfigRenderer",
     "ArubaSafeConfigRenderer",
     "CiscoSafeConfigRenderer",
     "SafeConfigRenderer",

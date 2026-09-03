@@ -15,6 +15,7 @@ let activeMode = "file";
 const vendorLabels = {
   cisco_ios: "Cisco IOS / IOS-XE",
   aruba_aos_cx: "Aruba AOS-CX",
+  aruba_aos_s: "ArubaOS-Switch (AOS-S / 2930F)",
 };
 
 for (const button of modeButtons) {

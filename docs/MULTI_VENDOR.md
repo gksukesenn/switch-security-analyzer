@@ -1,11 +1,18 @@
-# Multi-vendor direction
+# Multi-platform architecture
 
 - Vendor selection is explicit. An omitted vendor defaults to `cisco_ios` only
   for backward compatibility; configuration syntax is not auto-detected.
 - The parser, safe-configuration renderer, and coverage registry are selected
   together at application composition time.
-- `aruba_aos_cx` selects the Aruba parser, renderer, and coverage registry.
-  Unsupported vendors fail explicitly and never fall back to Cisco components.
+- Each identifier selects one complete component set:
+  - `cisco_ios`: Cisco IOS/IOS-XE;
+  - `aruba_aos_cx`: Aruba AOS-CX; and
+  - `aruba_aos_s`: ArubaOS-Switch / AOS-S.
+- A brand is not a network operating system. AOS-CX and AOS-S therefore use
+  separate parsers, renderers, and coverage registries despite both being
+  Aruba platforms.
+- Unsupported vendors fail explicitly and never fall back to Cisco, AOS-CX,
+  or AOS-S components.
 
 - Detection logic remains on the normalized model.
 - Each vendor parser produces normalized field evidence as `SourceLine`
@@ -17,18 +24,19 @@
   output exactly.
 - If a renderer is unavailable, safe configuration is `N/A`; Cisco syntax is
   never used as a cross-vendor fallback.
-- The Aruba renderer implements the verified first-slice operations and returns
-  `N/A` for unsupported operations. New vendor orchestration must explicitly
-  select a parser and renderer without adding vendor branches to rules.
+- Each Aruba renderer implements only its verified first-slice operations and
+  returns `N/A` for unsupported operations. Platform orchestration explicitly
+  selects components without adding vendor branches to rules.
 
-Aruba scoring uses the unchanged nine-rule denominator and assessment gate. A
-partial configuration may produce `score=N/A`; the fully safe first-slice
-fixture naturally reaches five assessed rules, so its 5/9 assessment ratio
-produces `score=N/A`. This does not imply a worse security result; it reflects
-that four controls are not yet assessed. See `ARUBA_AOS_CX.md` for the current
-scope.
+AOS-CX can assess up to five existing rules in its first slice; AOS-S can
+assess up to four where the required static evidence exists. Both use the
+unchanged nine-rule denominator and assessment gate, so limited platform
+slices may naturally produce `score=N/A`. This reports incomplete assessment,
+not a worse security result. See [AOS-CX scope](ARUBA_AOS_CX.md),
+[AOS-S scope](ARUBA_AOS_S.md), and [Scoring](SCORING.md).
 
-Batch Analysis can select both vendor pipelines within one request. Each
+Batch Analysis can select any of the three platform pipelines within one
+request. Each
 device's explicit vendor is passed through the same single-device application
 service, and batch logic only aggregates the returned results. It does not
 auto-detect vendors or combine vendor scoring semantics.

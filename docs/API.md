@@ -1,9 +1,9 @@
 # REST API V1
 
-The REST API exposes Cisco IOS and the Aruba AOS-CX first-slice pipelines. The API layer
-orchestrates parsing, registered rule evaluation, parser coverage, Analysis
-Confidence, and posture scoring; it does not implement security or scoring
-logic itself.
+The REST API exposes the Cisco IOS/IOS-XE, Aruba AOS-CX, and ArubaOS-Switch
+first-slice pipelines. The API layer orchestrates parsing, registered rule
+evaluation, parser coverage, Analysis Confidence, and posture scoring; it does
+not implement security or scoring logic itself.
 
 ## Running locally
 
@@ -40,7 +40,8 @@ Request body:
 `config` is required, must be a string, and must not be empty or contain only
 whitespace. Its UTF-8 representation is limited to 1 MiB (1,048,576 bytes).
 `vendor` is optional and defaults to `cisco_ios` for backward compatibility.
-Vendor auto-detection is not performed.
+Vendor auto-detection is not performed. Supported explicit values are
+`cisco_ios`, `aruba_aos_cx`, and `aruba_aos_s`.
 
 Example:
 
@@ -201,19 +202,21 @@ relevant syntax is present.
 
 - Missing fields, wrong types, blank config, invalid UTF-8 file content, and
   malformed JSON return `422`.
-- Unknown vendors return `422`. Supported explicit identifiers are `cisco_ios`
-  and `aruba_aos_cx`; neither ever falls back to the other vendor's pipeline.
+- Unknown vendors return `422`. Supported explicit identifiers are
+  `cisco_ios`, `aruba_aos_cx`, and `aruba_aos_s`; no identifier falls back to
+  another platform pipeline.
 - Config input larger than 1 MiB returns `413`.
 - Unexpected internal failures return `500` with a generic response and no
   Python traceback or internal exception detail.
 
 ## V1 scope and limitations
 
-The reference implementation analyzes Cisco IOS/IOS-XE syntax and a documented
-Aruba AOS-CX 10.12/10.13 first-slice subset. Parser,
-safe-config renderer, and coverage registry are selected together from the
-explicit vendor identifier. V1
-does not provide authentication, production hardening, rate limiting, TLS
+The reference implementation analyzes Cisco IOS/IOS-XE syntax and documented
+first-slice subsets for Aruba AOS-CX 10.12/10.13 and ArubaOS-Switch 2930F.
+Parser, safe-config renderer, and coverage registry are selected together from
+the explicit vendor identifier. There is no syntax auto-detection or
+cross-vendor fallback. V1 does not provide authentication, production
+hardening, rate limiting, TLS
 termination, persistent storage, or background processing. Batch V1 is
 synchronous and sequential. Vendor auto-detection and cross-vendor fallback
 are not provided.

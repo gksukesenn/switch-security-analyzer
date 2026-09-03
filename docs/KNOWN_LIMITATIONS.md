@@ -9,6 +9,22 @@ blocks are not modeled. See [Parser Coverage V1](PARSER_COVERAGE.md) for the
 classification model, formulas, dedicated fixtures, and provisional Analysis
 Confidence thresholds.
 
+## ArubaOS-Switch / AOS-S first slice
+
+The `aruba_aos_s` implementation is a limited Aruba 2930F first slice. Dynamic
+AAA/RADIUS VLAN assignment is not modeled as effective or static VLAN
+membership. A port with any static tagged membership is conservatively treated
+as non-access (`TRUNK` in the normalized analyzer domain), so endpoint-access
+rules do not evaluate it as an access port.
+
+Port Security, IP Source Lockdown, STP edge/BPDU protection, and management
+controls are deferred. Broad real configurations can consequently have `LOW`
+Analysis Confidence; this describes incomplete analysis, not device
+insecurity. A `DHCP-002` finding means a statically configured access VLAN is
+outside the normalized DHCP Snooping scope. Configuration evidence alone does
+not prove that the VLAN carries DHCP endpoints. See the concise
+[AOS-S platform scope](ARUBA_AOS_S.md).
+
 ## PORTSEC-001 — Peer consistency heuristic
 
 PORTSEC-001 uses at least one Port Security-enabled interface within the

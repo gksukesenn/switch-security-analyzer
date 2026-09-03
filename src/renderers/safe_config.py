@@ -169,6 +169,56 @@ class ArubaSafeConfigRenderer:
         )
 
 
+class ArubaAOSSafeConfigRenderer:
+    unavailable_text = "N/A"
+
+    def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str:
+        vlan_scope = " ".join(
+            str(vlan_id) for vlan_id in sorted(set(vlan_ids))
+        )
+        if not vlan_scope:
+            vlan_scope = "<intended-vlan-id>"
+        return f"dhcp-snooping\ndhcp-snooping vlan {vlan_scope}"
+
+    def add_dhcp_snooping_vlan(self, vlan_id: int) -> str:
+        return f"dhcp-snooping vlan {vlan_id}"
+
+    def correct_trusted_access_interface(
+        self,
+        interface_name: str,
+        access_vlan: int,
+    ) -> str:
+        return (
+            f"interface {interface_name}\n"
+            " no dhcp-snooping trust\n"
+            " exit"
+        )
+
+    def enable_dai_vlan(self, vlan_id: int) -> str:
+        return f"arp-protect vlan {vlan_id}"
+
+    def enable_bpdu_guard(self, interface_names: Iterable[str]) -> str:
+        return self.unavailable_text
+
+    def enable_port_security(self, interface_names: Iterable[str]) -> str:
+        return self.unavailable_text
+
+    def enable_ip_source_guard(
+        self,
+        interface_names: Iterable[str],
+    ) -> str:
+        return self.unavailable_text
+
+    def restrict_vty_to_ssh(
+        self,
+        vty_ranges: Iterable[tuple[int, int]],
+    ) -> str:
+        return self.unavailable_text
+
+    def disable_insecure_http_server(self) -> str:
+        return self.unavailable_text
+
+
 class UnavailableSafeConfigRenderer:
     unavailable_text = "N/A"
 

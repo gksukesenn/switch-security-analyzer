@@ -7,19 +7,19 @@ whether the device is secure.
 
 ## Line classifications
 
-Every nonblank line other than the exact Cisco `!` separator belongs to
-exactly one class:
+Every nonblank configuration line other than the exact `!` separator belongs
+to exactly one class.
 
-- `SUPPORTED_RELEVANT`: the Cisco parser successfully normalized a security
-  control used by the supported model, or structural context required by that
-  model.
+- `SUPPORTED_RELEVANT`: the selected vendor parser successfully normalized a
+  security control used by the supported model, or structural context required
+  by that model.
 - `UNSUPPORTED_RELEVANT`: the parser did not normalize the line, but the
-  executable Cisco coverage registry recognizes it as a declared analyzer
-  scope gap.
+  selected platform's executable coverage registry recognizes it as a declared
+  analyzer scope gap.
 - `OUT_OF_SCOPE`: the line is known not to contribute to the current security
   model. This allowlist is intentionally narrow.
 - `UNKNOWN_RELEVANCE`: the parser did not normalize the line and neither
-  registry can classify its relevance reliably.
+  selected registry can classify its relevance reliably.
 
 Parsed does not automatically mean relevant. For example, `hostname` and
 interface `description` are retained by the parser but no active rule,
@@ -28,13 +28,14 @@ reads their values. They are therefore `OUT_OF_SCOPE`. Conversely,
 `interface` and `line vty` are `SUPPORTED_RELEVANT` because they create parent
 context required to normalize security state.
 
-`CiscoIOSParser` is the only semantic Cisco parser. Its successful branches
-record `SUPPORTED_RELEVANT` or `OUT_OF_SCOPE` directly. Failed branches do not
-record successful coverage. Only parser-produced unparsed lines are offered
-to the small declarative registries. The unsupported registry is the
-executable source of truth for declared gaps; it identifies command families
-but never produces normalized security state or interprets nested syntax.
-Unmatched unparsed lines remain `UNKNOWN_RELEVANCE`.
+The explicitly selected vendor parser records `SUPPORTED_RELEVANT` or
+`OUT_OF_SCOPE` for successful branches. Failed branches do not record
+successful coverage. Only parser-produced unparsed lines are offered to that
+platform's small declarative registry. The selected parser plus its
+corresponding coverage registry is the executable classification source of
+truth. Registries identify declared command-family gaps but never produce
+normalized security state or interpret nested syntax. Unmatched unparsed
+lines remain `UNKNOWN_RELEVANCE`.
 
 ## Metrics
 
@@ -79,7 +80,7 @@ the rule-assessment ratio; see [Security Posture Scoring V1](SCORING.md).
 The `coverage_*.cfg` samples are dedicated dirty coverage fixtures with
 hand-asserted line counts. Existing security-rule golden samples are synthetic
 and exercise known parser/rule paths; their high coverage does not represent
-real-world Cisco configuration coverage.
+real-world configuration coverage for any platform.
 
 Multi-line `banner motd` and `banner login` blocks are deliberately excluded
 from V1 fixtures and classification allowlists. The current parser is

@@ -44,6 +44,9 @@ async def test_browser_ui_serves_analyzer_page():
     assert 'id="config-text"' in response.text
     assert 'value="cisco_ios"' in response.text
     assert 'value="aruba_aos_cx"' in response.text
+    assert 'value="aruba_aos_s"' in response.text
+    assert "Aruba AOS-CX" in response.text
+    assert "ArubaOS-Switch (AOS-S / 2930F)" in response.text
 
 
 async def test_browser_ui_stylesheet_is_served():
@@ -60,6 +63,11 @@ async def test_browser_ui_javascript_uses_existing_analysis_endpoints():
     assert "fetch(\"/analyze/file\"" in response.text
     assert "fetch(\"/analyze\"" in response.text
     assert "renderAnalysis(payload)" in response.text
+    assert 'aruba_aos_cx: "Aruba AOS-CX"' in response.text
+    assert (
+        'aruba_aos_s: "ArubaOS-Switch (AOS-S / 2930F)"'
+        in response.text
+    )
 
 
 async def test_swagger_docs_remain_accessible():
@@ -286,6 +294,69 @@ async def test_aruba_vendor_uses_aruba_pipeline():
     assert body["findings"][0]["safe_config_example"] == (
         "dhcpv4-snooping\nvlan 20\n dhcpv4-snooping"
     )
+
+
+async def test_analyze_accepts_aruba_aos_s_with_nullable_posture():
+    response = await api_request(
+        "POST",
+        "/analyze",
+        json={
+            "vendor": "aruba_aos_s",
+            "config": (
+                "dhcp-snooping\n"
+                "dhcp-snooping vlan 20\n"
+                "vlan 20\n untagged 2\n exit\n"
+            ),
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["device"]["vendor"] == "aruba_aos_s"
+    assert body["posture"]["score"] is None
+    assert body["posture"]["risk_level"] is None
+    assert body["analysis"]["total_rule_count"] == 9
+
+
+async def test_analyze_file_accepts_aruba_aos_s():
+    response = await api_request(
+        "POST",
+        "/analyze/file",
+        data={"vendor": "aruba_aos_s"},
+        files={
+            "file": (
+                "synthetic.cfg",
+                b"dhcp-snooping\ndhcp-snooping vlan 20\n",
+                "text/plain",
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["device"]["vendor"] == "aruba_aos_s"
+
+
+async def test_batch_analyze_accepts_aruba_aos_s_device():
+    response = await api_request(
+        "POST",
+        "/analyze/batch",
+        json={
+            "devices": [{
+                "device_id": "aos-s-01",
+                "vendor": "aruba_aos_s",
+                "config": "dhcp-snooping\ndhcp-snooping vlan 20\n",
+            }]
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["devices"][0]["device"]["vendor"] == "aruba_aos_s"
+    assert body["devices"][0]["posture"]["score"] is None
+    assert body["devices"][0]["posture"]["risk_level"] is None
+    assert body["statistics"]["by_vendor"]["aruba_aos_s"][
+        "device_count"
+    ] == 1
 
 
 async def test_analyze_serializes_fully_assessed_numeric_posture():
