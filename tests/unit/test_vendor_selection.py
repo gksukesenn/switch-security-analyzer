@@ -184,7 +184,7 @@ def test_aruba_policy_keeps_all_evaluations_and_existing_n_a_posture(
         assert result.evaluations[rule_id].findings == []
         assert result.evaluations[rule_id].assessed_units == 0
     assert result.posture.assessed_rule_count == assessed_rule_count
-    assert result.posture.total_rule_count == 9
+    assert result.posture.total_rule_count == 10
     assert result.posture.score is None
     assert result.posture.risk_level is None
 
@@ -211,9 +211,11 @@ line vty 0 4
     assert set(result.evaluations) == REGISTERED_RULE_IDS
     assert all(
         evaluation.assessed_units > 0
-        for evaluation in result.evaluations.values()
+        for rule_id, evaluation in result.evaluations.items()
+        if rule_id != "DISCOVERY-001"
     )
+    assert result.evaluations["DISCOVERY-001"].assessed_units == 0
     assert result.findings == ()
     assert result.posture.assessed_rule_count == 9
-    assert result.posture.total_rule_count == 9
+    assert result.posture.total_rule_count == 10
     assert result.posture.score == 100.0

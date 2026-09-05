@@ -92,17 +92,10 @@ UNSUPPORTED_COMMAND_FAMILIES = (
         r"^aaa\b.*$",
         "Declared AAA management-plane authentication gap.",
     ),
-    _family("cdp_global", r"^(?:no )?cdp run$", "Declared CDP gap."),
     _family(
-        "cdp_interface",
-        r"^(?:no )?cdp enable$",
-        "Declared interface CDP gap.",
-    ),
-    _family("lldp_global", r"^(?:no )?lldp run$", "Declared LLDP gap."),
-    _family(
-        "lldp_interface",
-        r"^(?:no )?lldp (?:transmit|receive)$",
-        "Declared interface LLDP gap.",
+        "lldp_receive",
+        r"^(?:no )?lldp receive$",
+        "LLDP receive is separate from advertisement and remains unmodeled.",
     ),
     _family(
         "root_guard",

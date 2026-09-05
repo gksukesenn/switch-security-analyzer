@@ -78,7 +78,7 @@ renderer, coverage registry, and supported rule ID selection is centralized in
 
 | Platform | Vendor identifier | Current scope |
 |---|---|---|
-| Cisco IOS / IOS-XE | `cisco_ios` | Main implementation: scoped Cisco IOS / IOS-XE command families and all nine registered rules when applicable context is present |
+| Cisco IOS / IOS-XE | `cisco_ios` | Main implementation: scoped Cisco IOS / IOS-XE command families and all ten registered rules when applicable context is present |
 | Aruba AOS-CX | `aruba_aos_cx` | Limited AOS-CX 10.12/10.13 slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001`, and `STP-001` |
 | ArubaOS-Switch / AOS-S | `aruba_aos_s` | Limited ArubaOS-Switch / 2930F slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, and `DAI-001` where static evidence permits |
 | Huawei VRP / S5720 | `huawei_vrp` | V200R021 first slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, and `STP-001` |
@@ -102,6 +102,7 @@ are not implemented. See [Aruba AOS-CX scope](docs/ARUBA_AOS_CX.md),
 | `STP-001` | PortFast/edge port lacks effective BPDU Guard |
 | `MGMT-001` | VTY lines explicitly permit Telnet |
 | `MGMT-002` | Standard HTTP management server explicitly enabled |
+| `DISCOVERY-001` | Explicit CDP/LLDP advertisement on an access interface |
 
 ## How analysis works
 
@@ -168,7 +169,7 @@ coverage and posture envelope.
 
 ## Validation
 
-The current automated suite has **522 passing tests** across parsers, rules,
+The current automated suite has **620 passing tests** across parsers, rules,
 domain models, scoring, APIs, browser contracts, both CLIs, golden outputs,
 and cross-vendor semantic parity.
 
@@ -191,7 +192,7 @@ See the [lab validation plan and status](docs/POC/LAB_VALIDATION_PLAN.md),
 
 ## Project status and limitations
 
-- **Implemented:** the four documented platform scopes, nine-rule engine,
+- **Implemented:** the four documented platform scopes, ten-rule engine,
   coverage/scoring pipeline, API, browser UI, both CLIs, and Docker packaging.
 - **Validated:** the automated suite, a bounded external AOS-S configuration
   check, Huawei S5720 real-config validation with documented limitations,

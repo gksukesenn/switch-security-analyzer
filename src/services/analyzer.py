@@ -4,6 +4,7 @@ from src.renderers.safe_config import (
     CiscoSafeConfigRenderer,
     SafeConfigRenderer,
 )
+from src.rules.discovery.discovery_001 import Discovery001AccessAdvertisementRule
 from src.rules.dai.dai_001 import DAI001DhcpVlanWithoutDAIRule
 from src.rules.dhcp.dhcp_001 import DHCP001GloballyInactiveRule
 from src.rules.dhcp.dhcp_002 import DHCP002AccessVlanNotCoveredRule
@@ -43,6 +44,7 @@ class AnalyzerService:
             IPSG001DhcpEndpointWithoutIPSGRule(renderer),
             MGMT001VtyTelnetEnabledRule(renderer),
             MGMT002InsecureHTTPServerRule(renderer),
+            Discovery001AccessAdvertisementRule(renderer),
         ]
 
     def analyze(self, raw_text: str) -> list[Finding]:

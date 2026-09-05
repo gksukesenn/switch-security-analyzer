@@ -145,8 +145,8 @@ def test_limited_first_slice_keeps_other_rules_unassessed_and_score_n_a():
 
     assert result.config.interfaces[0].port_security == ConfigState.UNKNOWN
     assert result.posture.assessed_rule_count == 4
-    assert result.posture.total_rule_count == 9
-    assert result.posture.rule_assessment_ratio == pytest.approx(4 / 9)
+    assert result.posture.total_rule_count == 10
+    assert result.posture.rule_assessment_ratio == pytest.approx(4 / 10)
     assert result.posture.score is None
     assert result.posture.risk_level is None
     assert result.posture.unavailable_reason == "insufficient_rule_assessment"

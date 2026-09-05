@@ -6,6 +6,7 @@ from src.services.analysis import AnalysisApplicationService
 
 
 REGISTERED_RULE_IDS = {
+    "DISCOVERY-001",
     "DHCP-001",
     "DHCP-002",
     "DHCP-003",
@@ -211,7 +212,7 @@ def test_deferred_huawei_controls_remain_explicitly_unassessed():
     assert result.coverage.unsupported_relevant == 5
 
 
-def test_safe_first_slice_keeps_nine_rule_denominator_and_n_a_posture():
+def test_safe_first_slice_keeps_ten_rule_denominator_and_n_a_posture():
     result = analyze(
         "dhcp snooping enable\n"
         "vlan 10\n"
@@ -228,8 +229,8 @@ def test_safe_first_slice_keeps_nine_rule_denominator_and_n_a_posture():
     assert set(result.evaluations) == REGISTERED_RULE_IDS
     assert result.findings == ()
     assert result.posture.assessed_rule_count == 4
-    assert result.posture.total_rule_count == 9
-    assert result.posture.rule_assessment_ratio == pytest.approx(4 / 9)
+    assert result.posture.total_rule_count == 10
+    assert result.posture.rule_assessment_ratio == pytest.approx(4 / 10)
     assert result.posture.score is None
     assert result.posture.risk_level is None
     assert result.posture.unavailable_reason == "insufficient_rule_assessment"

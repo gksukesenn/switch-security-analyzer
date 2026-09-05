@@ -63,16 +63,12 @@ The rule uses `MEDIUM` confidence because of these limitations. Its heuristic
 may be recalibrated when representative configuration corpora and additional
 access-control context become available.
 
-## DHCP-003 — Legacy safe configuration example
+## DHCP-003 — Endpoint-role verification
 
-DHCP-003 remediation correctly says to remove DHCP Snooping trust from an
-endpoint interface. Its current Cisco `safe_config_example`, however, repeats
-only the interface access mode and VLAN context and does not include
-`no ip dhcp snooping trust`.
-
-This mismatch is deliberately preserved for exact output parity during the
-vendor-renderer refactor. Correcting the example is a separate, intentional
-behavior-change checkpoint.
+The Cisco safe configuration example preserves ACCESS mode/VLAN and removes
+DHCP Snooping trust with `no ip dhcp snooping trust`. Operators must still
+verify that the interface is endpoint-facing rather than an authorized DHCP
+server path before applying the example.
 
 ## STP-001 — Initial effective-state scope
 
@@ -159,9 +155,30 @@ interpretation will require platform/release identification.
 Management reachability, HTTP ACL/access-class, authentication configuration,
 and HTTPS TLS/certificate quality are not evaluated.
 
+## DISCOVERY-001 — Explicit advertisement potential only
+
+The Cisco first slice requires explicit global and interface enablement for
+CDP or LLDP transmission. It does not infer Catalyst 2960-X default-enabled
+CDP behavior throughout the broader Cisco IOS/IOS-XE scope. Omission remains
+unknown, so default-driven advertisement may not be reported. Repeated
+identical commands are accepted; conflicting explicit state remains unknown.
+
+Only explicit ACCESS interfaces are eligible, without requiring an access
+VLAN. ACCESS is an endpoint-role approximation: phones and other managed
+endpoints may legitimately need discovery. Findings describe configured
+advertisement potential, not observed packets or verified operational links.
+TRUNK/UNKNOWN interfaces are excluded. LLDP receive does not create or
+suppress transmit exposure, and is not normalized in this slice.
+
+Remediation disables only the reported advertisement protocol(s) on the
+interface. It does not disable discovery globally, LLDP receive, or change
+mode/VLAN. Unverified reset forms, timers, TLVs and interface-range discovery
+configuration remain outside supported syntax; this is a running-config
+slice, not a command-script interpreter. Other platforms remain unassessed.
+
 ## Future default-aware controls
 
-Some future controls such as CDP/LLDP may require default-aware
+Broader CDP/LLDP analysis would require default-aware
 interpretation. Absence-based detection must only be introduced when the
 vendor/platform/release default has been authoritatively verified and the
 analyzed device profile is known with sufficient confidence.

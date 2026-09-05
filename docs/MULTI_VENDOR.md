@@ -11,7 +11,7 @@ IDs**. Its explicit platform pipelines are:
 
 | Identifier | Platform | Supported rule IDs |
 |---|---|---|
-| `cisco_ios` | Cisco IOS / IOS-XE | All nine registered rules |
+| `cisco_ios` | Cisco IOS / IOS-XE | All ten registered rules |
 | `aruba_aos_cx` | Aruba AOS-CX | `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001`, `STP-001` |
 | `aruba_aos_s` | ArubaOS-Switch / AOS-S | `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001` |
 | `huawei_vrp` | Huawei VRP / S5720 | `DHCP-001`, `DHCP-002`, `DHCP-003`, `STP-001` |
@@ -29,17 +29,21 @@ contains only registered IDs, then evaluates supported rules against the
 normalized configuration. Unsupported platform rules receive an empty
 `RuleEvaluation` with `assessed_units=0`.
 
-All nine registered rule IDs remain in evaluations and the scoring denominator.
+All ten registered rule IDs remain in evaluations and the scoring denominator.
 Platform support does not guarantee config-level assessment: even a supported
 rule needs applicable normalized evidence before it can assess units. This
 policy requires no vendor-specific branches inside rule implementations.
 
 AOS-CX can assess up to five rules, AOS-S up to four, and Huawei VRP up to four
-in their first slices. The unchanged nine-rule denominator and eligibility
+in their first slices. The ten-rule denominator and unchanged eligibility
 gate can therefore produce score/risk `N/A`. This reports incomplete
 assessment, not a worse security result. See [AOS-CX scope](ARUBA_AOS_CX.md),
 [AOS-S scope](ARUBA_AOS_S.md), [Huawei VRP scope](HUAWEI_VRP.md), and
 [Scoring](SCORING.md).
+
+Cisco additionally supports `DISCOVERY-001`; the other capability sets remain
+unchanged and its evaluation stays unassessed on those platforms. Their
+maximum assessment ratios are now 5/10, 4/10, and 4/10 respectively.
 
 ## Normalization and rendering
 

@@ -5,6 +5,10 @@ from src.utils import natural_sort_key
 
 
 class SafeConfigRenderer(Protocol):
+    def disable_discovery_advertisement(
+        self, interface_name: str, *, cdp: bool, lldp: bool,
+    ) -> str: ...
+
     def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str: ...
 
     def add_dhcp_snooping_vlan(self, vlan_id: int) -> str: ...
@@ -35,6 +39,18 @@ class SafeConfigRenderer(Protocol):
 
 
 class CiscoSafeConfigRenderer:
+    def disable_discovery_advertisement(
+        self, interface_name: str, *, cdp: bool, lldp: bool,
+    ) -> str:
+        commands = []
+        if cdp:
+            commands.append(" no cdp enable")
+        if lldp:
+            commands.append(" no lldp transmit")
+        if not commands:
+            return "N/A"
+        return "\n".join([f"interface {interface_name}", *commands])
+
     def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str:
         vlan_scope = [
             f"ip dhcp snooping vlan {vlan_id}"
@@ -106,6 +122,11 @@ class CiscoSafeConfigRenderer:
 class ArubaSafeConfigRenderer:
     unavailable_text = "N/A"
 
+    def disable_discovery_advertisement(
+        self, interface_name: str, *, cdp: bool, lldp: bool,
+    ) -> str:
+        return self.unavailable_text
+
     def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str:
         vlan_scope = [
             f"vlan {vlan_id}\n dhcpv4-snooping"
@@ -173,6 +194,11 @@ class ArubaSafeConfigRenderer:
 class ArubaAOSSafeConfigRenderer:
     unavailable_text = "N/A"
 
+    def disable_discovery_advertisement(
+        self, interface_name: str, *, cdp: bool, lldp: bool,
+    ) -> str:
+        return self.unavailable_text
+
     def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str:
         vlan_scope = " ".join(
             str(vlan_id) for vlan_id in sorted(set(vlan_ids))
@@ -222,6 +248,11 @@ class ArubaAOSSafeConfigRenderer:
 
 class HuaweiVRPSafeConfigRenderer:
     unavailable_text = "N/A"
+
+    def disable_discovery_advertisement(
+        self, interface_name: str, *, cdp: bool, lldp: bool,
+    ) -> str:
+        return self.unavailable_text
 
     def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str:
         ordered_vlan_ids = sorted(set(vlan_ids))
@@ -282,6 +313,11 @@ class HuaweiVRPSafeConfigRenderer:
 
 class UnavailableSafeConfigRenderer:
     unavailable_text = "N/A"
+
+    def disable_discovery_advertisement(
+        self, interface_name: str, *, cdp: bool, lldp: bool,
+    ) -> str:
+        return self.unavailable_text
 
     def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str:
         return self.unavailable_text

@@ -328,7 +328,7 @@ async def test_analyze_accepts_aruba_aos_s_with_nullable_posture():
     assert body["device"]["vendor"] == "aruba_aos_s"
     assert body["posture"]["score"] is None
     assert body["posture"]["risk_level"] is None
-    assert body["analysis"]["total_rule_count"] == 9
+    assert body["analysis"]["total_rule_count"] == 10
 
 
 async def test_analyze_file_accepts_aruba_aos_s():
@@ -398,8 +398,8 @@ line vty 0 4
     assert body["analysis"]["parser_coverage"] == 1.0
     assert body["analysis"]["analysis_confidence"] == "high"
     assert body["analysis"]["assessed_rule_count"] == 9
-    assert body["analysis"]["total_rule_count"] == 9
-    assert body["analysis"]["rule_assessment_ratio"] == 1.0
+    assert body["analysis"]["total_rule_count"] == 10
+    assert body["analysis"]["rule_assessment_ratio"] == 0.9
     assert body["posture"]["score"] == 100.0
     assert body["posture"]["display_score"] == 100
     assert body["posture"]["risk_level"] == "low"
@@ -648,7 +648,7 @@ async def test_huawei_surfaces_preserve_vendor_and_limited_posture(endpoint):
         assert body["device_id"] == "huawei"
     assert body["device"]["vendor"] == "huawei_vrp"
     assert body["device"]["hostname"] == "SYNTHETIC-HUAWEI"
-    assert body["analysis"]["total_rule_count"] == 9
+    assert body["analysis"]["total_rule_count"] == 10
     assert body["analysis"]["assessed_rule_count"] <= 4
     assert body["analysis"]["analysis_confidence"] == "low"
     assert body["posture"]["score"] is None
@@ -681,3 +681,26 @@ async def test_finding_risk_is_preserved_in_all_analysis_responses(endpoint):
     assert type(body["findings"][0]["risk_score"]) is int
     assert body["findings"][0]["risk_score"] == 8
     assert body["posture"]["score"] is None
+
+
+@pytest.mark.parametrize("endpoint", ["/analyze", "/analyze/batch"])
+async def test_discovery_serializes_through_existing_contract(endpoint):
+    device = {"vendor": "cisco_ios", "config": (
+        "cdp run\ninterface Gi1/0/1\n switchport mode access\n cdp enable\n"
+    )}
+    payload = {"devices": [{"device_id": "synthetic", **device}]} if endpoint.endswith("batch") else device
+    response = await api_request("POST", endpoint, json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    if endpoint.endswith("batch"):
+        assert body["statistics"]["by_category"] == {"INFORMATION_LEAKAGE": 1}
+        body = body["devices"][0]
+    finding, = body["findings"]
+    assert finding["rule_id"] == "DISCOVERY-001"
+    assert finding["severity"] == finding["confidence"] == "medium"
+    assert finding["risk_score"] == 4
+    assert finding["safe_config_example"] == "interface Gi1/0/1\n no cdp enable"
+    assert finding["evidence"]
+    assert finding["technical_impact"]
+    assert finding["remediation"]
+    assert body["analysis"]["total_rule_count"] == 10

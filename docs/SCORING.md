@@ -34,7 +34,7 @@ means fewer observed violations within sufficiently assessed scope.
 
 ## Eligibility
 
-All nine registered rules expose `RuleEvaluation`. V1 counts a rule as
+All ten registered rules expose `RuleEvaluation`. V1 counts a rule as
 assessed when its `assessed_units` is greater than zero:
 
 ```text
@@ -65,6 +65,13 @@ This resolves the zero-finding collision for scoring eligibility:
 
 A score of 100 means no violation was observed in the sufficiently assessed,
 supported scope. It does not mean the device is universally secure.
+
+`DISCOVERY-001` adds one registered rule, making the denominator ten. It
+assesses explicit ACCESS interfaces when either protocol is demonstrably
+advertised or both are demonstrably disabled. One disabled protocol with the
+other unknown remains unassessed. One finding groups both exposed protocols
+on an interface, so exposure remains interface-based rather than counted
+twice for CDP and LLDP. Existing penalty formulas and thresholds are unchanged.
 
 ## Finding penalty
 

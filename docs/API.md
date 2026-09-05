@@ -64,8 +64,8 @@ The response has four sections:
     "unknown_ratio": 0.0,
     "analysis_confidence": "high",
     "assessed_rule_count": 1,
-    "total_rule_count": 9,
-    "rule_assessment_ratio": 0.1111111111111111
+    "total_rule_count": 10,
+    "rule_assessment_ratio": 0.1
   },
   "posture": {
     "score": null,

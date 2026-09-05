@@ -103,3 +103,17 @@ command may have different effective meaning across Cisco versions, so V1
 does not claim default-aware coverage. Representative real configurations and
 known device profiles are required for both default-aware interpretation and
 threshold calibration.
+
+## Cisco discovery first slice
+
+Exact global `cdp run` / `no cdp run`, `lldp run` / `no lldp run`, and
+interface `cdp enable` / `no cdp enable`, `lldp transmit` / `no lldp transmit`
+are parser-owned `SUPPORTED_RELEVANT` commands in their correct contexts.
+Conflicting explicit commands leave the corresponding state `UNKNOWN`;
+understanding command syntax does not establish effective enablement.
+
+`lldp receive` / `no lldp receive` remain `UNSUPPORTED_RELEVANT`. Timers,
+TLV controls, abbreviations and unverified resets are not normalized; unknown
+variants remain `UNKNOWN_RELEVANCE`. No broad discovery allowlist is used.
+Supported classification can change coverage/confidence for existing inputs;
+classification formulas and thresholds are unchanged.

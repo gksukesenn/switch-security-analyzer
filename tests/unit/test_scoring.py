@@ -293,7 +293,7 @@ line vty 0 4
     result = ScoringService().evaluate(raw_text)
 
     assert result.assessed_rule_count == 9
-    assert result.total_rule_count == 9
-    assert result.rule_assessment_ratio == 1.0
+    assert result.total_rule_count == 10
+    assert result.rule_assessment_ratio == 0.9
     assert result.score == 100.0
     assert result.risk_level == RiskLevel.LOW

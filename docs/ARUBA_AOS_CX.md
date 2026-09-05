@@ -46,10 +46,10 @@ The Aruba registry classifies only the verified unsupported AOS-CX DAI
 interface-trust family in unparsed lines. Other unknown syntax, including CLI
 forms not verified for source lockdown, remains `UNKNOWN_RELEVANCE`.
 
-Scoring uses the unchanged nine-rule denominator and existing assessment gate.
+Scoring uses the ten-rule denominator and unchanged assessment gate.
 For the fully safe first-slice fixture, five rules are counted as assessed:
 DHCP-001, DHCP-002, DHCP-003, DAI-001, and STP-001. The resulting assessment
-ratio is 5/9 (approximately 55.6%), so the unchanged assessment gate reports
+ratio is 5/10 (50%), so the unchanged assessment gate reports
 the posture score and risk level as `N/A`. IPSG-001 is not assessed because
 its decisive interface state is `UNKNOWN`; it produces no finding. No
 vendor-specific denominator or scoring exception is introduced.
@@ -64,3 +64,5 @@ the AOS-CX Port Security command subset.
 - Aruba AOS-CX 10.12 CLI/IP Services Guides for Dynamic ARP Inspection.
 - Aruba AOS-CX 10.13 Layer 2 Bridging Guides for access VLAN, routing mode,
   admin-edge, and BPDU Guard commands.
+
+`DISCOVERY-001` is also unsupported and remains unassessed on AOS-CX.

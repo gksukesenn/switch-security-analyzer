@@ -89,8 +89,8 @@ def test_unsupported_aruba_controls_do_not_create_ipsg_or_portsec_findings():
     assert result.evaluations["IPSG-001"].findings == []
     assert result.evaluations["IPSG-001"].assessed_units == 0
     assert result.posture.assessed_rule_count == 5
-    assert result.posture.total_rule_count == 9
-    assert result.posture.rule_assessment_ratio == pytest.approx(5 / 9)
+    assert result.posture.total_rule_count == 10
+    assert result.posture.rule_assessment_ratio == pytest.approx(5 / 10)
     assert result.posture.score is None
     assert result.posture.risk_level is None
 

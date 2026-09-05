@@ -84,6 +84,11 @@ class InterfaceConfig:
 
     raw_lines: list[SourceLine] = field(default_factory=list)
 
+    cdp: ConfigState = ConfigState.NOT_CONFIGURED
+    cdp_evidence: SourceLine | None = None
+    lldp_transmit: ConfigState = ConfigState.NOT_CONFIGURED
+    lldp_transmit_evidence: SourceLine | None = None
+
 
 @dataclass
 class VtyConfig:
@@ -137,6 +142,11 @@ class ParsedConfig:
     parsed_line_coverage: dict[int, CoverageClass] = field(
         default_factory=dict
     )
+
+    cdp_global: ConfigState = ConfigState.NOT_CONFIGURED
+    cdp_global_evidence: SourceLine | None = None
+    lldp_global: ConfigState = ConfigState.NOT_CONFIGURED
+    lldp_global_evidence: SourceLine | None = None
 
 
 @dataclass

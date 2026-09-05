@@ -33,7 +33,7 @@ Where the required static evidence is present, the current slice can assess
 `PORTSEC-001`, `IPSG-001`, `STP-001`, `MGMT-001`, and `MGMT-002` are deferred.
 Unsupported interface security states remain `UNKNOWN`, so the existing rules
 do not produce absence-based findings for controls the parser did not assess.
-The unchanged scoring model still uses all nine registered rules as its
+The unchanged scoring model still uses all ten registered rules as its
 denominator; a limited AOS-S analysis may therefore report score and risk as
 `N/A`.
 
@@ -69,3 +69,6 @@ remain unmodeled. Analysis Confidence describes analysis completeness; it is
 not a statement that the device is insecure. See
 [Parser Coverage](PARSER_COVERAGE.md), [Scoring](SCORING.md), and
 [Known Limitations](KNOWN_LIMITATIONS.md).
+
+`DISCOVERY-001` is also unsupported; current first-slice assessment is at most
+4/10. The external validation above describes its original execution.

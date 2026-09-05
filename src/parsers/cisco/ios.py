@@ -41,6 +41,15 @@ class CiscoIOSParser:
             if current_interface is not None and raw_line[:1].isspace():
                 current_interface.raw_lines.append(source_line)
 
+                if (
+                    not current_interface.name.startswith("range ")
+                    and self._parse_discovery(
+                        stripped, source_line, current_interface, config,
+                        {"cdp enable": "cdp", "lldp transmit": "lldp_transmit"},
+                    )
+                ):
+                    continue
+
                 if stripped.startswith("description "):
                     current_interface.description = stripped.removeprefix(
                         "description "
@@ -153,6 +162,12 @@ class CiscoIOSParser:
             # Girintisiz yeni bir komut geldiyse interface bloğu bitmiştir.
             current_interface = None
             current_vty = None
+
+            if not raw_line[:1].isspace() and self._parse_discovery(
+                stripped, source_line, config, config,
+                {"cdp run": "cdp_global", "lldp run": "lldp_global"},
+            ):
+                continue
 
             if stripped.startswith("interface "):
                 interface_name = stripped.removeprefix(
@@ -296,6 +311,31 @@ class CiscoIOSParser:
                 config.unparsed_lines.append(source_line)
 
         return config
+
+    @classmethod
+    def _parse_discovery(
+        cls,
+        command: str,
+        line: SourceLine,
+        target: ParsedConfig | InterfaceConfig,
+        config: ParsedConfig,
+        commands: dict[str, str],
+    ) -> bool:
+        positive = command.removeprefix("no ")
+        field_name = commands.get(positive)
+        if field_name is None:
+            return False
+        state = (
+            ConfigState.DISABLED
+            if command.startswith("no ") else ConfigState.ENABLED
+        )
+        previous = getattr(target, field_name)
+        if previous not in (ConfigState.NOT_CONFIGURED, state):
+            state = ConfigState.UNKNOWN
+        setattr(target, field_name, state)
+        setattr(target, field_name + "_evidence", line)
+        cls._record_supported(config, line)
+        return True
 
     @staticmethod
     def _parse_vlan_expression(vlan_text: str) -> set[int]:

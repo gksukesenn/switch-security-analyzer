@@ -45,7 +45,7 @@ curl --fail --request POST "$ANALYZER_URL/analyze" \
   --data "$(python -c 'import json; from pathlib import Path; print(json.dumps({"vendor":"cisco_ios","config":Path("samples/demo/cisco_scored_safe.cfg").read_text()}))')"
 ```
 
-Expected: nine assessed rules, no findings, score `100.0`, and risk `low`.
+Expected: nine of ten assessed rules (discovery remains unassessed), no findings, score `100.0`, and risk `low`.
 This means no violation was observed in fully assessed supported scope; it is
 not an absolute security certification.
 
@@ -59,7 +59,7 @@ curl --fail --request POST "$ANALYZER_URL/analyze" \
 
 Expected: vendor `aruba_aos_cx`, five assessed rules, no findings, and posture
 score `null` because the partial Aruba slice does not meet the unchanged
-nine-rule assessment gate.
+ten-rule assessment denominator and unchanged gate.
 
 ## 5. Mixed batch
 

@@ -50,14 +50,17 @@ VLAN. Unsupported syntax remains outside normalized security state.
 | `PORTSEC-001` | Deferred / unassessed |
 | `MGMT-001` | Deferred / unassessed |
 | `MGMT-002` | Deferred / unassessed |
+| `DISCOVERY-001` | Unsupported / unassessed |
 
-The explicit platform rule-support policy keeps all nine rule IDs in
+The explicit platform rule-support policy keeps all ten rule IDs in
 `evaluations`. Unsupported platform rules have no findings and
-`assessed_units=0`; the scoring denominator remains nine. Platform support is
+`assessed_units=0`; the scoring denominator is ten. Platform support is
 separate from config-level assessment: supported rules still need applicable
 static evidence. There are no Huawei/vendor branches inside rule
 implementations. See [multi-vendor architecture](MULTI_VENDOR.md) for the
 canonical composition policy.
+
+Current first-slice assessment is at most 4/10.
 
 ## Real-config validation
 
@@ -74,6 +77,9 @@ conclusions are limited to these non-sensitive observations:
 - Interface-scoped DAI did not become false VLAN-wide DAI state.
 - STP edge intent was detected.
 - Unsupported security families remained unassessed.
+
+The following numbers record the historical nine-rule validation run, before
+`DISCOVERY-001` was registered; they are not current denominator claims.
 
 | Observed first-slice result | Value |
 |---|---|

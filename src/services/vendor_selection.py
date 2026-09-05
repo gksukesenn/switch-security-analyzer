@@ -22,6 +22,7 @@ from src.renderers.safe_config import (
 
 
 CISCO_SUPPORTED_RULE_IDS = frozenset({
+    "DISCOVERY-001",
     "DHCP-001",
     "DHCP-002",
     "DHCP-003",
