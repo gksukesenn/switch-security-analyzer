@@ -1,42 +1,60 @@
 # Multi-platform architecture
 
-- Vendor selection is explicit. An omitted vendor defaults to `cisco_ios` only
-  for backward compatibility; configuration syntax is not auto-detected.
-- The parser, safe-configuration renderer, and coverage registry are selected
-  together at application composition time.
-- Each identifier selects one complete component set:
-  - `cisco_ios`: Cisco IOS/IOS-XE;
-  - `aruba_aos_cx`: Aruba AOS-CX; and
-  - `aruba_aos_s`: ArubaOS-Switch / AOS-S.
-- A brand is not a network operating system. AOS-CX and AOS-S therefore use
-  separate parsers, renderers, and coverage registries despite both being
-  Aruba platforms.
-- Unsupported vendors fail explicitly and never fall back to Cisco, AOS-CX,
-  or AOS-S components.
+Vendor selection is explicit. Only `POST /analyze` and the application
+service's default argument retain `cisco_ios` as a backward-compatible default;
+configuration syntax is not auto-detected. File uploads, batch devices, and
+the HTTP CLI require an explicit vendor.
+
+`VendorComponentSelector` selects four components together at application
+composition time: **parser + renderer + coverage registry + supported rule
+IDs**. Its explicit platform pipelines are:
+
+| Identifier | Platform | Supported rule IDs |
+|---|---|---|
+| `cisco_ios` | Cisco IOS / IOS-XE | All nine registered rules |
+| `aruba_aos_cx` | Aruba AOS-CX | `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001`, `STP-001` |
+| `aruba_aos_s` | ArubaOS-Switch / AOS-S | `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001` |
+| `huawei_vrp` | Huawei VRP / S5720 | `DHCP-001`, `DHCP-002`, `DHCP-003`, `STP-001` |
+
+AOS-CX and AOS-S remain separate platforms, with separate parsers, renderers,
+and coverage registries. The selector explicitly constructs component sets;
+there is no dynamic plugin discovery. Unsupported vendors fail explicitly,
+and no cross-vendor syntax fallback exists.
+
+## Platform rule-support policy
+
+`VendorComponents.supported_rule_ids` is an explicit capability set introduced
+during Huawei Phase 1. `AnalysisApplicationService` validates that the set
+contains only registered IDs, then evaluates supported rules against the
+normalized configuration. Unsupported platform rules receive an empty
+`RuleEvaluation` with `assessed_units=0`.
+
+All nine registered rule IDs remain in evaluations and the scoring denominator.
+Platform support does not guarantee config-level assessment: even a supported
+rule needs applicable normalized evidence before it can assess units. This
+policy requires no vendor-specific branches inside rule implementations.
+
+AOS-CX can assess up to five rules, AOS-S up to four, and Huawei VRP up to four
+in their first slices. The unchanged nine-rule denominator and eligibility
+gate can therefore produce score/risk `N/A`. This reports incomplete
+assessment, not a worse security result. See [AOS-CX scope](ARUBA_AOS_CX.md),
+[AOS-S scope](ARUBA_AOS_S.md), [Huawei VRP scope](HUAWEI_VRP.md), and
+[Scoring](SCORING.md).
+
+## Normalization and rendering
 
 - Detection logic remains on the normalized model.
-- Each vendor parser produces normalized field evidence as `SourceLine`
-  provenance alongside the normalized value.
-- Rules must not scan raw vendor command syntax when normalized provenance is
-  available.
-- Safe-configuration syntax is delegated to a vendor renderer. The Cisco
-  renderer is the current reference implementation and preserves the existing
-  output exactly.
-- If a renderer is unavailable, safe configuration is `N/A`; Cisco syntax is
-  never used as a cross-vendor fallback.
-- Each Aruba renderer implements only its verified first-slice operations and
-  returns `N/A` for unsupported operations. Platform orchestration explicitly
-  selects components without adding vendor branches to rules.
+- Each vendor parser provides `SourceLine` provenance alongside normalized
+  field values. Rules must not scan raw vendor syntax when normalized
+  provenance is available.
+- Safe-configuration syntax is delegated to the selected renderer. The Cisco
+  reference renderer preserves existing output; first-slice Aruba and Huawei
+  renderers implement only their supported operations.
+- Unavailable rendering returns `N/A`; Cisco syntax is never substituted as a
+  cross-vendor fallback.
 
-AOS-CX can assess up to five existing rules in its first slice; AOS-S can
-assess up to four where the required static evidence exists. Both use the
-unchanged nine-rule denominator and assessment gate, so limited platform
-slices may naturally produce `score=N/A`. This reports incomplete assessment,
-not a worse security result. See [AOS-CX scope](ARUBA_AOS_CX.md),
-[AOS-S scope](ARUBA_AOS_S.md), and [Scoring](SCORING.md).
-
-Batch Analysis can select any of the three platform pipelines within one
-request. Each
-device's explicit vendor is passed through the same single-device application
-service, and batch logic only aggregates the returned results. It does not
-auto-detect vendors or combine vendor scoring semantics.
+Batch Analysis can select any of the four platform pipelines in one request.
+Each device's explicit vendor passes through the same single-device
+application service; batch logic only aggregates returned results. It does
+not auto-detect vendors or combine vendor scoring semantics. The separate
+local/offline CLI continues to invoke the Cisco analyzer directly.

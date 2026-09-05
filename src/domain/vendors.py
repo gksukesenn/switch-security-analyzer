@@ -5,6 +5,7 @@ class Vendor(str, Enum):
     CISCO_IOS = "cisco_ios"
     ARUBA_AOS_CX = "aruba_aos_cx"
     ARUBA_AOS_S = "aruba_aos_s"
+    HUAWEI_VRP = "huawei_vrp"
 
 
 class UnsupportedVendorError(ValueError):

@@ -3,9 +3,9 @@
 ## Parser Coverage V1
 
 Parser Coverage V1 is line-oriented and is not vendor-version/default aware.
-Its small executable registry, rather than this prose document, is the source
-of truth for declared unsupported Cisco command families. Multi-line banner
-blocks are not modeled. See [Parser Coverage V1](PARSER_COVERAGE.md) for the
+The selected platform’s small executable registry, rather than this prose
+document, is the source of truth for declared unsupported command families.
+Multi-line banner blocks are not modeled. See [Parser Coverage V1](PARSER_COVERAGE.md) for the
 classification model, formulas, dedicated fixtures, and provisional Analysis
 Confidence thresholds.
 
@@ -24,6 +24,20 @@ insecurity. A `DHCP-002` finding means a statically configured access VLAN is
 outside the normalized DHCP Snooping scope. Configuration evidence alone does
 not prove that the VLAN carries DHCP endpoints. See the concise
 [AOS-S platform scope](ARUBA_AOS_S.md).
+
+## Huawei VRP first slice
+
+`huawei_vrp` is scoped to Huawei S5720 / V200R021 first-slice behavior. HYBRID
+is `UNKNOWN`, not modeled as ACCESS or TRUNK; hybrid membership and trunk
+VLAN scope are deferred. Interface-scoped DHCP Snooping is not represented
+exactly or promoted to VLAN-wide protection. Interface-scoped DAI prevents
+safe `DAI-001` support in the current VLAN-based model. IPSG, Port Security,
+and management rules are also deferred and unassessed.
+
+Substantial unknown syntax may yield `LOW` Analysis Confidence, indicating
+limited analyzer coverage rather than device insecurity. `DHCP-002` identifies
+a static ACCESS VLAN outside modeled DHCP Snooping scope; it does not prove
+actual DHCP client usage. See [Huawei VRP scope](HUAWEI_VRP.md).
 
 ## PORTSEC-001 — Peer consistency heuristic
 

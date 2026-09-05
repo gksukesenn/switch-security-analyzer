@@ -47,6 +47,17 @@ async def test_browser_ui_serves_analyzer_page():
     assert 'value="aruba_aos_s"' in response.text
     assert "Aruba AOS-CX" in response.text
     assert "ArubaOS-Switch (AOS-S / 2930F)" in response.text
+    assert '<option value="cisco_ios">Cisco IOS / IOS-XE</option>' in response.text
+    assert '<option value="aruba_aos_cx">Aruba AOS-CX</option>' in response.text
+    assert (
+        '<option value="aruba_aos_s">ArubaOS-Switch (AOS-S / 2930F)</option>'
+        in response.text
+    )
+    assert response.text.count('<option value="huawei_vrp">') == 1
+    assert (
+        '<option value="huawei_vrp">Huawei VRP (S5720 first slice)</option>'
+        in response.text
+    )
 
 
 async def test_browser_ui_stylesheet_is_served():
@@ -64,6 +75,7 @@ async def test_browser_ui_javascript_uses_existing_analysis_endpoints():
     assert "fetch(\"/analyze\"" in response.text
     assert "renderAnalysis(payload)" in response.text
     assert 'aruba_aos_cx: "Aruba AOS-CX"' in response.text
+    assert 'huawei_vrp: "Huawei VRP (S5720 first slice)"' in response.text
     assert (
         'aruba_aos_s: "ArubaOS-Switch (AOS-S / 2930F)"'
         in response.text
@@ -602,4 +614,45 @@ async def test_batch_analyze_enforces_per_config_byte_limit():
         "detail": (
             f"config for large exceeds the {MAX_CONFIG_BYTES}-byte limit"
         )
+    }
+
+
+@pytest.mark.parametrize("endpoint", ["/analyze", "/analyze/file", "/analyze/batch"])
+async def test_huawei_surfaces_preserve_vendor_and_limited_posture(endpoint):
+    config = (
+        "sysname SYNTHETIC-HUAWEI\ndhcp snooping enable\n"
+        "telnet server enable\nhttp server enable\n"
+    )
+    if endpoint == "/analyze/file":
+        kwargs = {
+            "data": {"vendor": "huawei_vrp"},
+            "files": {"file": ("synthetic.cfg", config.encode(), "text/plain")},
+        }
+    elif endpoint == "/analyze/batch":
+        kwargs = {"json": {"devices": [
+            {"device_id": "cisco", "vendor": "cisco_ios", "config": "hostname SYNTHETIC\n"},
+            {"device_id": "huawei", "vendor": "huawei_vrp", "config": config},
+        ]}}
+    else:
+        kwargs = {"json": {"vendor": "huawei_vrp", "config": config}}
+
+    response = await api_request("POST", endpoint, **kwargs)
+
+    assert response.status_code == 200
+    body = response.json()
+    if endpoint == "/analyze/batch":
+        assert body["devices"][0]["device"]["vendor"] == "cisco_ios"
+        assert body["statistics"]["by_vendor"]["huawei_vrp"]["device_count"] == 1
+        body = body["devices"][1]
+        assert body["device_id"] == "huawei"
+    assert body["device"]["vendor"] == "huawei_vrp"
+    assert body["device"]["hostname"] == "SYNTHETIC-HUAWEI"
+    assert body["analysis"]["total_rule_count"] == 9
+    assert body["analysis"]["assessed_rule_count"] <= 4
+    assert body["analysis"]["analysis_confidence"] == "low"
+    assert body["posture"]["score"] is None
+    assert body["posture"]["display_score"] is None
+    assert body["posture"]["risk_level"] is None
+    assert {finding["rule_id"] for finding in body["findings"]} <= {
+        "DHCP-001", "DHCP-002", "DHCP-003", "STP-001",
     }

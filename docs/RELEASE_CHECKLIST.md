@@ -13,9 +13,10 @@ tag. Do not commit generated response files or container artefacts.
 - [ ] CLI smoke test succeeds with a committed Cisco sample.
 - [ ] API `GET /health` returns HTTP 200 and `{"status":"ok"}`.
 - [ ] Cisco `POST /analyze` smoke test matches the API schema.
-- [ ] Aruba `POST /analyze` smoke test matches the API schema and preserves N/A
-  posture as JSON `null` where applicable.
-- [ ] Mixed Cisco/Aruba `POST /analyze/batch` preserves per-device order and
+- [ ] Separate Aruba AOS-CX and AOS-S `POST /analyze` smoke tests match the API
+  schema and preserve N/A posture as JSON `null` where applicable.
+- [ ] Huawei VRP `POST /analyze` preserves `huawei_vrp` and permits N/A posture.
+- [ ] Mixed Cisco/Aruba/Huawei `POST /analyze/batch` preserves per-device order and
   reports deterministic aggregate statistics.
 
 ## Container
@@ -24,7 +25,8 @@ tag. Do not commit generated response files or container artefacts.
 - [ ] The image starts without reload/debug mode and listens on container port
   8000 at `0.0.0.0`.
 - [ ] The running process is non-root.
-- [ ] Container health, Cisco, Aruba, and mixed-batch smoke tests pass.
+- [ ] Container health, Cisco, Aruba AOS-CX, Aruba AOS-S, Huawei, and
+  mixed-batch smoke tests pass.
 - [ ] `docker compose config` validates the single stateless service.
 
 ## Scope and handoff

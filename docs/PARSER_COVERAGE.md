@@ -18,11 +18,11 @@ to exactly one class.
   analyzer scope gap.
 - `OUT_OF_SCOPE`: the line is known not to contribute to the current security
   model. This allowlist is intentionally narrow.
-- `UNKNOWN_RELEVANCE`: the parser did not normalize the line and neither
-  selected registry can classify its relevance reliably.
+- `UNKNOWN_RELEVANCE`: the parser did not normalize the line and the
+  selected registry cannot classify its relevance reliably.
 
-Parsed does not automatically mean relevant. For example, `hostname` and
-interface `description` are retained by the parser but no active rule,
+Parsed does not automatically mean relevant. For example, `hostname`, Huawei
+`sysname`, and interface `description` are retained by the parser but no active rule,
 effective-state calculation, evidence builder, or affected-resource selection
 reads their values. They are therefore `OUT_OF_SCOPE`. Conversely,
 `interface` and `line vty` are `SUPPORTED_RELEVANT` because they create parent
@@ -36,6 +36,10 @@ corresponding coverage registry is the executable classification source of
 truth. Registries identify declared command-family gaps but never produce
 normalized security state or interpret nested syntax. Unmatched unparsed
 lines remain `UNKNOWN_RELEVANCE`.
+
+These classifications apply to all four explicit platforms: Cisco IOS /
+IOS-XE, Aruba AOS-CX, ArubaOS-Switch / AOS-S, and Huawei VRP. Huawei `#`
+context separators are classified as `OUT_OF_SCOPE`.
 
 ## Metrics
 
@@ -81,6 +85,12 @@ The `coverage_*.cfg` samples are dedicated dirty coverage fixtures with
 hand-asserted line counts. Existing security-rule golden samples are synthetic
 and exercise known parser/rule paths; their high coverage does not represent
 real-world configuration coverage for any platform.
+
+Huawei S5720 / V200R021 first-slice real configurations may retain substantial
+`UNSUPPORTED_RELEVANT` and `UNKNOWN_RELEVANCE` syntax. Broad allowlists are
+intentionally avoided; unmodeled security families and unknown commands must
+not inflate coverage. Resulting `LOW` Analysis Confidence describes limited
+analyzer coverage, not low device security. See [Huawei VRP](HUAWEI_VRP.md).
 
 Multi-line `banner motd` and `banner login` blocks are deliberately excluded
 from V1 fixtures and classification allowlists. The current parser is

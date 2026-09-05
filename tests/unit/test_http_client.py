@@ -1,4 +1,5 @@
 import io
+import json
 
 import httpx
 import pytest
@@ -232,3 +233,47 @@ def test_client_failure_returns_nonzero_without_traceback(monkeypatch):
         "Error: Could not connect to the analyzer server.\n"
     )
     assert "Traceback" not in stderr.getvalue()
+
+
+@pytest.mark.parametrize("input_mode", ["stdin", "file"])
+def test_huawei_cli_sends_vendor_unchanged_and_renders_na(
+    monkeypatch, tmp_path, input_mode,
+):
+    config = "sysname SYNTHETIC-HUAWEI\ndhcp snooping enable\n"
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        if input_mode == "stdin":
+            assert request.url.path == "/analyze"
+            assert json.loads(request.read()) == {
+                "vendor": "huawei_vrp", "config": config,
+            }
+        else:
+            assert request.url.path == "/analyze/file"
+            assert request.headers["content-type"].startswith("multipart/form-data")
+            assert b'name="vendor"\r\n\r\nhuawei_vrp\r\n' in request.read()
+            assert config.encode() in request.read()
+        response = analysis_response()
+        response["device"] = {"vendor": "huawei_vrp", "hostname": "SYNTHETIC-HUAWEI"}
+        response["analysis"]["analysis_confidence"] = "low"
+        response["findings"] = []
+        return httpx.Response(200, json=response)
+
+    client = AnalyzerHttpClient(transport=httpx.MockTransport(handler))
+    monkeypatch.setattr(cli, "AnalyzerHttpClient", lambda server: client)
+    args = ["--vendor", "huawei_vrp"]
+    if input_mode == "file":
+        path = tmp_path / "synthetic.cfg"
+        path.write_text(config, encoding="utf-8")
+        args.extend(["--file", str(path)])
+    else:
+        args.append("--stdin")
+    output = io.StringIO()
+
+    assert cli.main(args, stdin=io.StringIO(config), stdout=output) == 0
+    assert len(requests) == 1
+    assert "Vendor:              huawei_vrp" in output.getvalue()
+    assert "Security score:      N/A" in output.getvalue()
+    assert "Risk level:          N/A" in output.getvalue()
+    assert "Analysis confidence: low" in output.getvalue()

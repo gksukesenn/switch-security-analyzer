@@ -219,6 +219,66 @@ class ArubaAOSSafeConfigRenderer:
         return self.unavailable_text
 
 
+class HuaweiVRPSafeConfigRenderer:
+    unavailable_text = "N/A"
+
+    def enable_dhcp_snooping(self, vlan_ids: Iterable[int]) -> str:
+        ordered_vlan_ids = sorted(set(vlan_ids))
+        if not ordered_vlan_ids:
+            vlan_blocks = [self._dhcp_vlan_block("<intended-vlan-id>")]
+        else:
+            vlan_blocks = [
+                self._dhcp_vlan_block(str(vlan_id))
+                for vlan_id in ordered_vlan_ids
+            ]
+        return "\n".join(["dhcp snooping enable", *vlan_blocks])
+
+    def add_dhcp_snooping_vlan(self, vlan_id: int) -> str:
+        return "\n".join([
+            "dhcp snooping enable",
+            self._dhcp_vlan_block(str(vlan_id)),
+        ])
+
+    def correct_trusted_access_interface(
+        self,
+        interface_name: str,
+        access_vlan: int,
+    ) -> str:
+        return (
+            f"interface {interface_name}\n"
+            " undo dhcp snooping trusted\n"
+            "quit"
+        )
+
+    def enable_dai_vlan(self, vlan_id: int) -> str:
+        return self.unavailable_text
+
+    def enable_bpdu_guard(self, interface_names: Iterable[str]) -> str:
+        return "stp bpdu-protection"
+
+    def enable_port_security(self, interface_names: Iterable[str]) -> str:
+        return self.unavailable_text
+
+    def enable_ip_source_guard(
+        self,
+        interface_names: Iterable[str],
+    ) -> str:
+        return self.unavailable_text
+
+    def restrict_vty_to_ssh(
+        self,
+        vty_ranges: Iterable[tuple[int, int]],
+    ) -> str:
+        return self.unavailable_text
+
+    def disable_insecure_http_server(self) -> str:
+        return self.unavailable_text
+
+    @staticmethod
+    def _dhcp_vlan_block(vlan_id: str) -> str:
+        return f"vlan {vlan_id}\n dhcp snooping enable\nquit"
+
+
 class UnavailableSafeConfigRenderer:
     unavailable_text = "N/A"
 

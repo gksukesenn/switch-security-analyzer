@@ -16,6 +16,7 @@ const vendorLabels = {
   cisco_ios: "Cisco IOS / IOS-XE",
   aruba_aos_cx: "Aruba AOS-CX",
   aruba_aos_s: "ArubaOS-Switch (AOS-S / 2930F)",
+  huawei_vrp: "Huawei VRP (S5720 first slice)",
 };
 
 for (const button of modeButtons) {

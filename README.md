@@ -7,8 +7,8 @@ source-line evidence, remediation guidance, and safe configuration examples.
 Vendor-specific syntax is normalized before rules run, keeping detection logic
 portable and testable. The current implementation supports scoped Cisco IOS /
 IOS-XE analysis plus distinct, deliberately limited Aruba AOS-CX and
-ArubaOS-Switch first slices, exposed through a REST API, HTTP CLI client,
-browser UI, and local/offline CLI.
+ArubaOS-Switch and Huawei VRP first slices, exposed through a REST API,
+HTTP CLI client, and browser UI. A separate local/offline CLI supports Cisco.
 
 ## Highlights
 
@@ -71,20 +71,22 @@ flowchart LR
 
 The composition root is
 [`AnalysisApplicationService`](src/services/analysis.py); vendor parser,
-renderer, and coverage registry selection is centralized in
+renderer, coverage registry, and supported rule ID selection is centralized in
 [`VendorComponentSelector`](src/services/vendor_selection.py).
 
 ## Supported platforms
 
-| Vendor identifier | Current scope |
-|---|---|
-| `cisco_ios` | Main implementation: scoped Cisco IOS / IOS-XE command families and all nine registered rules when applicable context is present |
-| `aruba_aos_cx` | Limited AOS-CX 10.12/10.13 slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001`, and `STP-001` |
-| `aruba_aos_s` | Limited ArubaOS-Switch / 2930F slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, and `DAI-001` where static evidence permits |
+| Platform | Vendor identifier | Current scope |
+|---|---|---|
+| Cisco IOS / IOS-XE | `cisco_ios` | Main implementation: scoped Cisco IOS / IOS-XE command families and all nine registered rules when applicable context is present |
+| Aruba AOS-CX | `aruba_aos_cx` | Limited AOS-CX 10.12/10.13 slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, `DAI-001`, and `STP-001` |
+| ArubaOS-Switch / AOS-S | `aruba_aos_s` | Limited ArubaOS-Switch / 2930F slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, and `DAI-001` where static evidence permits |
+| Huawei VRP / S5720 | `huawei_vrp` | V200R021 first slice: `DHCP-001`, `DHCP-002`, `DHCP-003`, and `STP-001` |
 
 Vendor selection is explicit; syntax auto-detection and cross-vendor fallback
 are not implemented. See [Aruba AOS-CX scope](docs/ARUBA_AOS_CX.md),
-[ArubaOS-Switch scope](docs/ARUBA_AOS_S.md), and
+[ArubaOS-Switch scope](docs/ARUBA_AOS_S.md),
+[Huawei VRP scope](docs/HUAWEI_VRP.md), and
 [multi-vendor architecture](docs/MULTI_VENDOR.md).
 
 ## Security checks
@@ -166,7 +168,7 @@ coverage and posture envelope.
 
 ## Validation
 
-The current automated suite has **441 passing tests** across parsers, rules,
+The current automated suite has **522 passing tests** across parsers, rules,
 domain models, scoring, APIs, browser contracts, both CLIs, golden outputs,
 and cross-vendor semantic parity.
 
@@ -189,10 +191,11 @@ See the [lab validation plan and status](docs/POC/LAB_VALIDATION_PLAN.md),
 
 ## Project status and limitations
 
-- **Implemented:** the three documented platform scopes, nine-rule engine,
+- **Implemented:** the four documented platform scopes, nine-rule engine,
   coverage/scoring pipeline, API, browser UI, both CLIs, and Docker packaging.
 - **Validated:** the automated suite, a bounded external AOS-S configuration
-  check, and the two defensive lab controls listed above.
+  check, Huawei S5720 real-config validation with documented limitations,
+  and the two defensive lab controls listed above.
 - **Future work — not implemented:** broader vendor/syntax/rule coverage,
   representative-data calibration, production hardening, and additional lab
   validation.
@@ -206,6 +209,7 @@ parser gaps, rule boundaries, and provisional thresholds are documented in
 - [REST API](docs/API.md) · [Batch analysis](docs/BATCH_ANALYSIS.md)
 - [Aruba AOS-CX](docs/ARUBA_AOS_CX.md) ·
   [ArubaOS-Switch](docs/ARUBA_AOS_S.md) ·
+  [Huawei VRP](docs/HUAWEI_VRP.md) ·
   [Multi-vendor architecture](docs/MULTI_VENDOR.md)
 - [Parser Coverage](docs/PARSER_COVERAGE.md) · [Scoring](docs/SCORING.md)
 - [Rule authoring](docs/RULE_AUTHORING.md) · [Known limitations](docs/KNOWN_LIMITATIONS.md)

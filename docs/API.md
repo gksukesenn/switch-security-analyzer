@@ -1,8 +1,8 @@
 # REST API V1
 
-The REST API exposes the Cisco IOS/IOS-XE, Aruba AOS-CX, and ArubaOS-Switch
-first-slice pipelines. The API layer orchestrates parsing, registered rule
-evaluation, parser coverage, Analysis Confidence, and posture scoring; it does
+The REST API exposes Cisco IOS/IOS-XE and the Aruba AOS-CX,
+ArubaOS-Switch / AOS-S, and Huawei VRP first-slice pipelines. The API layer
+orchestrates parsing, registered rule evaluation, parser coverage, Analysis Confidence, and posture scoring; it does
 not implement security or scoring logic itself.
 
 ## Running locally
@@ -41,7 +41,7 @@ Request body:
 whitespace. Its UTF-8 representation is limited to 1 MiB (1,048,576 bytes).
 `vendor` is optional and defaults to `cisco_ios` for backward compatibility.
 Vendor auto-detection is not performed. Supported explicit values are
-`cisco_ios`, `aruba_aos_cx`, and `aruba_aos_s`.
+`cisco_ios`, `aruba_aos_cx`, `aruba_aos_s`, and `huawei_vrp`.
 
 Example:
 
@@ -188,12 +188,20 @@ the existing 1 MiB UTF-8 limit; an oversized config returns `413`. V1 adds no
 separate total-request byte budget. It has no partial-success response, and an
 unexpected failure returns the same generic `500` as single-device analysis.
 
+`POST /analyze`, `POST /analyze/file`, and `POST /analyze/batch` accept
+`huawei_vrp` through the existing `Vendor` validation. No endpoint contract,
+syntax auto-detection, or cross-vendor fallback is added.
+
 ## N/A posture
 
 Unavailable posture values are JSON `null`, never numeric zero. This keeps an
 unavailable score distinct from a real score of zero. `unavailable_reason`
 reports the existing scoring gate reason, such as insufficient rule
 assessment or low/unknown Analysis Confidence.
+
+Limited platform coverage, including the [Huawei first slice](HUAWEI_VRP.md),
+can legitimately produce score and risk as JSON `null` (displayed as `N/A`
+in the browser and HTTP CLI). This does not establish device insecurity.
 
 Parser Coverage may also be `null` when no supported or known unsupported
 relevant syntax is present.
@@ -203,8 +211,8 @@ relevant syntax is present.
 - Missing fields, wrong types, blank config, invalid UTF-8 file content, and
   malformed JSON return `422`.
 - Unknown vendors return `422`. Supported explicit identifiers are
-  `cisco_ios`, `aruba_aos_cx`, and `aruba_aos_s`; no identifier falls back to
-  another platform pipeline.
+  `cisco_ios`, `aruba_aos_cx`, `aruba_aos_s`, and `huawei_vrp`; no identifier
+  falls back to another platform pipeline.
 - Config input larger than 1 MiB returns `413`.
 - Unexpected internal failures return `500` with a generic response and no
   Python traceback or internal exception detail.
@@ -212,8 +220,9 @@ relevant syntax is present.
 ## V1 scope and limitations
 
 The reference implementation analyzes Cisco IOS/IOS-XE syntax and documented
-first-slice subsets for Aruba AOS-CX 10.12/10.13 and ArubaOS-Switch 2930F.
-Parser, safe-config renderer, and coverage registry are selected together from
+first-slice subsets for Aruba AOS-CX 10.12/10.13, ArubaOS-Switch 2930F, and
+Huawei S5720 / V200R021. Parser, safe-config renderer, coverage registry, and
+supported rule IDs are selected together from
 the explicit vendor identifier. There is no syntax auto-detection or
 cross-vendor fallback. V1 does not provide authentication, production
 hardening, rate limiting, TLS

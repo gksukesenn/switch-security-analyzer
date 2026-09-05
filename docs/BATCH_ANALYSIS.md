@@ -1,8 +1,9 @@
 # Batch Analysis V1
 
-Batch Analysis accepts up to 50 Cisco IOS/IOS-XE, Aruba AOS-CX, and
-ArubaOS-Switch configurations in a single request. Device identifiers must be
-non-empty and unique, and every device must explicitly select a supported
+Batch Analysis accepts up to 50 configurations in a single request, mixing
+Cisco IOS/IOS-XE (`cisco_ios`), Aruba AOS-CX (`aruba_aos_cx`),
+ArubaOS-Switch / AOS-S (`aruba_aos_s`), and Huawei VRP (`huawei_vrp`).
+Device identifiers must be non-empty and unique, and every device must explicitly select a supported
 vendor.
 
 ## Architecture

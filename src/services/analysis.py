@@ -45,8 +45,23 @@ class AnalysisApplicationService:
             registry=components.coverage_registry,
         )
         config = analyzer.parser.parse(raw_text)
+        registered_rule_ids = frozenset(
+            rule.rule_id for rule in analyzer.rules
+        )
+        undeclared_rule_ids = (
+            components.supported_rule_ids - registered_rule_ids
+        )
+        if undeclared_rule_ids:
+            raise ValueError(
+                "platform supports unregistered rule IDs: "
+                f"{sorted(undeclared_rule_ids)}"
+            )
         evaluations = {
-            rule.rule_id: rule.evaluate_detailed(config)
+            rule.rule_id: (
+                rule.evaluate_detailed(config)
+                if rule.rule_id in components.supported_rule_ids
+                else RuleEvaluation([], 0)
+            )
             for rule in analyzer.rules
         }
         findings = tuple(
