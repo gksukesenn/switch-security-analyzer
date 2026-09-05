@@ -363,6 +363,7 @@ def _analysis_response(
                 category=finding.category,
                 severity=finding.severity.value,
                 confidence=finding.confidence.value,
+                risk_score=finding.risk_score,
                 technical_impact=finding.technical_impact,
                 remediation=finding.remediation,
                 safe_config_example=finding.safe_config_example,

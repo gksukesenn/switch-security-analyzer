@@ -128,6 +128,11 @@ def render_analysis(result: dict[str, Any], output: TextIO) -> None:
         )
         print(f"Severity:   {_display(finding.get('severity'))}", file=output)
         print(f"Confidence: {_display(finding.get('confidence'))}", file=output)
+        risk_score = finding.get("risk_score")
+        print(
+            f"Risk score: {str(risk_score) + '/10' if risk_score is not None else 'N/A'}",
+            file=output,
+        )
         interfaces = finding.get("affected_interfaces") or []
         displayed_interfaces = ", ".join(map(str, interfaces))
         print(

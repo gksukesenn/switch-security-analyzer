@@ -82,6 +82,7 @@ The response has four sections:
       "category": "MGMT",
       "severity": "high",
       "confidence": "high",
+      "risk_score": 8,
       "technical_impact": "...",
       "remediation": "...",
       "safe_config_example": "no ip http server",
@@ -96,6 +97,11 @@ The response has four sections:
   ]
 }
 ```
+
+Each finding includes `risk_score`, an integer from 1 through 10 derived from
+severity and finding confidence using the [central prioritization policy](SCORING.md).
+It is separate from device posture and remains present when posture is `null`.
+The additive field is shared by JSON, file-upload, and batch responses.
 
 Finding and evidence order follows the deterministic registered-rule and
 rule-evidence order. When scoring is eligible, `rule_penalties` contains the

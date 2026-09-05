@@ -74,6 +74,7 @@ async def test_browser_ui_javascript_uses_existing_analysis_endpoints():
     assert "fetch(\"/analyze/file\"" in response.text
     assert "fetch(\"/analyze\"" in response.text
     assert "renderAnalysis(payload)" in response.text
+    assert 'detailBlock("Finding risk score", `${finding.risk_score}/10`)' in response.text
     assert 'aruba_aos_cx: "Aruba AOS-CX"' in response.text
     assert 'huawei_vrp: "Huawei VRP (S5720 first slice)"' in response.text
     assert (
@@ -656,3 +657,27 @@ async def test_huawei_surfaces_preserve_vendor_and_limited_posture(endpoint):
     assert {finding["rule_id"] for finding in body["findings"]} <= {
         "DHCP-001", "DHCP-002", "DHCP-003", "STP-001",
     }
+
+
+@pytest.mark.parametrize("endpoint", ["/analyze", "/analyze/file", "/analyze/batch"])
+async def test_finding_risk_is_preserved_in_all_analysis_responses(endpoint):
+    config = "ip http server\n"
+    if endpoint == "/analyze/file":
+        kwargs = {"data": {"vendor": "cisco_ios"}, "files": {
+            "file": ("synthetic.cfg", config.encode(), "text/plain"),
+        }}
+    elif endpoint == "/analyze/batch":
+        kwargs = {"json": {"devices": [{
+            "device_id": "synthetic", "vendor": "cisco_ios", "config": config,
+        }]}}
+    else:
+        kwargs = {"json": {"vendor": "cisco_ios", "config": config}}
+    response = await api_request("POST", endpoint, **kwargs)
+    assert response.status_code == 200
+    body = response.json()
+    if endpoint == "/analyze/batch":
+        body = body["devices"][0]
+    assert body["findings"][0]["rule_id"] == "MGMT-002"
+    assert type(body["findings"][0]["risk_score"]) is int
+    assert body["findings"][0]["risk_score"] == 8
+    assert body["posture"]["score"] is None

@@ -9,6 +9,29 @@ the completeness of parser understanding for the device. Finding Confidence
 describes confidence in one finding and affects that finding's rule-level
 penalty.
 
+## Finding Risk Score: 1–10
+
+Every finding exposes an integer `risk_score` computed centrally from its
+severity and finding confidence. This is a deterministic prioritization
+heuristic, not CVSS or measured exploit probability.
+
+| Severity | HIGH confidence | MEDIUM confidence | LOW confidence |
+|---|---:|---:|---:|
+| CRITICAL | 10 | 9 | 8 |
+| HIGH | 8 | 7 | 6 |
+| MEDIUM | 5 | 4 | 3 |
+| LOW | 3 | 2 | 1 |
+
+Confidence affects prioritization: lower confidence reduces the finding risk
+score at the same severity. `Finding.risk_score` is derived automatically;
+rules and vendors do not assign independent risk numbers.
+
+The **Device Posture Score: 0–100 / N/A** remains separate. Its rule penalties,
+exposure factors, assessment ratio and coverage/confidence gates do not consume
+`risk_score`. A finding retains its risk score even when device posture is
+unavailable. Higher finding risk means higher priority; higher device posture
+means fewer observed violations within sufficiently assessed scope.
+
 ## Eligibility
 
 All nine registered rules expose `RuleEvaluation`. V1 counts a rule as

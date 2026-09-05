@@ -28,6 +28,7 @@ def analysis_response():
             "title": "Insecure HTTP management service explicitly enabled",
             "severity": "high",
             "confidence": "high",
+            "risk_score": 8,
             "affected_interfaces": [],
             "technical_impact": "HTTP management traffic is unencrypted.",
             "evidence": [{"line_number": 2, "text": "ip http server"}],
@@ -207,6 +208,7 @@ def test_successful_terminal_rendering_includes_server_values():
     assert "Parser coverage:     100.0%" in rendered
     assert "Findings:            1" in rendered
     assert "MGMT-002" in rendered
+    assert "Risk score: 8/10" in rendered
     assert "line 2: ip http server" in rendered
     assert "no ip http server" in rendered
 

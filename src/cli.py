@@ -36,6 +36,7 @@ def main() -> None:
         print(f"Title:      {finding.title}")
         print(f"Severity:   {finding.severity.value.upper()}")
         print(f"Confidence: {finding.confidence.value.upper()}")
+        print(f"Risk score: {finding.risk_score}/10")
 
         if finding.affected_interfaces:
             print()

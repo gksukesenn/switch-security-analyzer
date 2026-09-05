@@ -103,6 +103,7 @@ class FindingResponse(BaseModel):
     category: str
     severity: str
     confidence: str
+    risk_score: Annotated[int, Field(strict=True, ge=1, le=10)]
     technical_impact: str
     remediation: str
     safe_config_example: str

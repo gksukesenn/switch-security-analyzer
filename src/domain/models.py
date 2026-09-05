@@ -29,6 +29,14 @@ class Confidence(str, Enum):
     HIGH = "high"
 
 
+_FINDING_RISK_SCORES = {
+    Severity.CRITICAL: {Confidence.HIGH: 10, Confidence.MEDIUM: 9, Confidence.LOW: 8},
+    Severity.HIGH: {Confidence.HIGH: 8, Confidence.MEDIUM: 7, Confidence.LOW: 6},
+    Severity.MEDIUM: {Confidence.HIGH: 5, Confidence.MEDIUM: 4, Confidence.LOW: 3},
+    Severity.LOW: {Confidence.HIGH: 3, Confidence.MEDIUM: 2, Confidence.LOW: 1},
+}
+
+
 class CoverageClass(str, Enum):
     SUPPORTED_RELEVANT = "supported_relevant"
     UNSUPPORTED_RELEVANT = "unsupported_relevant"
@@ -146,6 +154,11 @@ class Finding:
 
     evidence: list[SourceLine] = field(default_factory=list)
     affected_interfaces: list[str] = field(default_factory=list)
+
+    @property
+    def risk_score(self) -> int:
+        """Deterministic prioritization heuristic, not probability or posture."""
+        return _FINDING_RISK_SCORES[self.severity][self.confidence]
 
 
 @dataclass(frozen=True)

@@ -213,6 +213,7 @@ function createFinding(finding) {
 
   const body = element("div", "finding-body");
   body.append(
+    detailBlock("Finding risk score", `${finding.risk_score}/10`),
     detailBlock("Technical impact", finding.technical_impact),
     detailBlock("Remediation", finding.remediation),
     detailBlock(

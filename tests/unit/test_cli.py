@@ -17,6 +17,7 @@ def test_cli_prints_dhcp_003_finding(monkeypatch, capsys):
     assert "Rule:       DHCP-003" in output
     assert "Severity:   HIGH" in output
     assert "Confidence: MEDIUM" in output
+    assert "Risk score: 7/10" in output
     assert "Affected interfaces:" in output
     assert "  - GigabitEthernet1/0/5" in output
     assert "Safe configuration example:" in output
