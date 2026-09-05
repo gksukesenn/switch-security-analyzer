@@ -55,7 +55,8 @@ class CiscoSafeConfigRenderer:
         return (
             f"interface {interface_name}\n"
             " switchport mode access\n"
-            f" switchport access vlan {access_vlan}"
+            f" switchport access vlan {access_vlan}\n"
+            " no ip dhcp snooping trust"
         )
 
     def enable_dai_vlan(self, vlan_id: int) -> str:

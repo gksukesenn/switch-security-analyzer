@@ -31,13 +31,14 @@ def test_cisco_renders_dhcp_snooping_vlan_addition():
     )
 
 
-def test_cisco_preserves_legacy_trusted_access_interface_example():
+def test_cisco_removes_trust_while_preserving_access_mode_and_vlan():
     assert CiscoSafeConfigRenderer().correct_trusted_access_interface(
         "GigabitEthernet1/0/5", 20
     ) == (
         "interface GigabitEthernet1/0/5\n"
         " switchport mode access\n"
-        " switchport access vlan 20"
+        " switchport access vlan 20\n"
+        " no ip dhcp snooping trust"
     )
 
 

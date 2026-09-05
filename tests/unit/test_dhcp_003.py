@@ -38,9 +38,10 @@ interface GigabitEthernet1/0/22
     assert finding.safe_config_example == (
         "interface GigabitEthernet1/0/22\n"
         " switchport mode access\n"
-        " switchport access vlan 30"
+        " switchport access vlan 30\n"
+        " no ip dhcp snooping trust"
     )
-    assert "ip dhcp snooping trust" not in finding.safe_config_example
+    assert finding.risk_score == 7
 
 
 def test_dhcp_003_does_not_fire_when_vlan_is_not_protected():
